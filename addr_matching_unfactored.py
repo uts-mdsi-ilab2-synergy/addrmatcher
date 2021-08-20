@@ -2,6 +2,7 @@ import Levenshtein as lev
 import pandas as pd
 
 gnaf_address_combined = pd.read_csv("AU-GNAF.csv", dtype='str')
+asgs = pd.read_csv("AU-ASGS.csv", dtype='str')
 
 AU = {}
 AU['MESH_BLOCK'] = 'MB_CODE_2016'
@@ -12,7 +13,6 @@ AU['SA4'] = 'SA4_NAME_2016'
 AU['SUBURB'] = 'SSC_NAME_2016'
 AU['LGA'] = 'LGA_NAME_2016'
 AU['STATE'] = 'STATE_NAME_2016'
-
 
 country = AU
 
