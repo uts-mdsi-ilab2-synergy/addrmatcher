@@ -1,1 +1,1 @@
-# addrmatcher
+This is a simple example content.
