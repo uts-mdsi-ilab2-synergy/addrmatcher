@@ -121,7 +121,7 @@ au_lga = pd.DataFrame()
 for state in states:
     au_lga_state = pd.read_csv("LGA_2016_" + state + ".csv", dtype="str")
     if au_lga.shape[0] == 0:
-        au_lga = gnaf_adress_mb_state
+        au_lga = au_lga_state
     else:
         au_lga = au_lga.append(au_lga_state, ignore_index=True)
 
