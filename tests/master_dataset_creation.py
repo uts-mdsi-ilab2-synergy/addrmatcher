@@ -80,10 +80,18 @@ gnaf_address_combined = (
         how="inner",
         on="ADDRESS_DETAIL_PID",
     )
+    .merge(
+        gnaf_address_geocode[["ADDRESS_DETAIL_PID", "LONGITUDE", "LATITUDE"]],
+        how="left",
+        on="ADDRESS_DETAIL_PID",
+    )
 )
 
 # replace NaN/None with emptry string, for string concatenation purposes
 gnaf_address_combined.fillna("", inplace=True)
+
+gnaf_address_combined["LONGITUDE"] = gnaf_address_combined["LONGITUDE"].astype(float)
+gnaf_address_combined["LATITUDE"] = gnaf_address_combined["LATITUDE"].astype(float)
 
 gnaf_address_combined["FULL_ADDRESS"] = (
     gnaf_address_combined["LOT_NUMBER_PREFIX"].astype(str)
