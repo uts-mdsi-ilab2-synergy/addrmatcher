@@ -1,5 +1,5 @@
-import pandas as pd
 import math
+import pandas as pd
 from scipy import spatial
 from ast import literal_eval
 
@@ -18,6 +18,15 @@ AU["LGA"] = "LGA_NAME_2016"
 AU["STATE"] = "STATE_NAME_2016"
 
 country = AU
+places = []
+
+######### Get the catesian coordinates of all addresses in GNAF dataset ######
+# Convert the string type '(xxx,xxx,xxx)' to tuple (xxx,xxx,xxx)
+gnaf_address_combined["CARTESIAN_COOR"] = gnaf_address_combined["CARTESIAN_COOR"].apply(
+    lambda x: literal_eval(str(x))
+)
+# Convert the column value to a list which will be used to construct a KDTree in next step
+places = gnaf_address_combined["CARTESIAN_COOR"].tolist()
 
 
 def cartesian(latitude, longitude, elevation=0):
@@ -33,25 +42,10 @@ def cartesian(latitude, longitude, elevation=0):
     return (X, Y, Z)
 
 
-def getCartesianCoordinatesArray():
-
-    # Convert the string type '(xxx,xxx,xxx)' to tuple (xxx,xxx,xxx)
-    gnaf_address_combined["CARTESIAN_COOR"] = gnaf_address_combined[
-        "CARTESIAN_COOR"
-    ].apply(lambda x: literal_eval(str(x)))
-
-    # Convert the column value to a list which will be used to construct a KDTree in next step
-    places = gnaf_address_combined["CARTESIAN_COOR"].tolist()
-    return places
-
-
 def getRegionByCoordinates(lat, lon):
 
     # Calculate the catesian coordinates of the input
     cartesian_coord = cartesian(lat, lon)
-
-    # Get the catesian coordinates of all addresses in GNAF datasets
-    places = getCartesianCoordinatesArray()
 
     # Build the tree
     tree = spatial.KDTree(places)
