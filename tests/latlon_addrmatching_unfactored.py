@@ -1,6 +1,7 @@
 import pandas as pd
 import math
 from scipy import spatial
+from ast import literal_eval
 
 gnaf_address_combined = pd.read_csv("AU-GNAF.csv")
 asgs = pd.read_csv("AU-ASGS.csv", dtype="str")
@@ -20,6 +21,7 @@ country = AU
 
 
 def cartesian(latitude, longitude, elevation=0):
+
     # Convert to radians
     latitude = latitude * (math.pi / 180)
     longitude = longitude * (math.pi / 180)
@@ -32,32 +34,44 @@ def cartesian(latitude, longitude, elevation=0):
 
 
 def getCartesianCoordinatesArray():
-    places = []
-    for index, row in gnaf_address_combined[["CARTESIAN_COOR"]].iterrows():
-        places.append(row["CARTESIAN_COOR"])
+
+    # Convert the string type '(xxx,xxx,xxx)' to tuple (xxx,xxx,xxx)
+    gnaf_address_combined["CARTESIAN_COOR"] = gnaf_address_combined[
+        "CARTESIAN_COOR"
+    ].apply(lambda x: literal_eval(str(x)))
+
+    # Convert the column value to a list which will be used to construct a KDTree in next step
+    places = gnaf_address_combined["CARTESIAN_COOR"].tolist()
     return places
 
 
 def getRegionByCoordinates(lat, lon):
 
+    # Calculate the catesian coordinates of the input
     cartesian_coord = cartesian(lat, lon)
 
-    ### Actually CARTESIAN_COOR is already saved in Dataset
-    gnaf_address_combined["CARTESIAN_COOR"] = gnaf_address_combined[
-        ["LATITUDE", "LONGITUDE"]
-    ].apply(lambda x: cartesian(*list((x.LATITUDE, x.LONGITUDE))), axis=1)
+    # Get the catesian coordinates of all addresses in GNAF datasets
     places = getCartesianCoordinatesArray()
 
+    # Build the tree
     tree = spatial.KDTree(places)
+
+    # Find the nearest point to the input
     closest = tree.query([cartesian_coord], p=2)
+
+    # Get the index of the first closest point / row
     index = closest[1][0]
 
     ## Get the result row
     res = gnaf_address_combined.iloc[index, :]
     print(res["FULL_ADDRESS"])
 
+    # Get the Meshed block code of the record to find the match in ASGS dataset
     mb = res["MB_2016_PID"]
     print(mb)
+
+    # Remove the (prefix)first 4 characters from the string suuch as MB1680024002000 in GNAF , but 80024002000 in ASGS
+    # Get the matching record in ASGS
     region = asgs[asgs["MB_CODE_2016"] == mb[4:]]
 
     for key, value in AU.items():
