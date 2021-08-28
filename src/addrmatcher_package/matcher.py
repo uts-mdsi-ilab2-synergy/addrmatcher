@@ -84,7 +84,7 @@ class GeoMatcher:
         if isinstance(self._data, list):
 
             for data in self._data:
-                data["RATIO"] = data["FULL_ADRESS"].apply(
+                data["RATIO"] = data["FULL_ADDRESS"].apply(
                     lambda x: fuzz.ratio(
                         re.sub(r"[\W_]+", "", address.lower()),
                         re.sub(r"[\W_]+", "", x.lower()),
@@ -98,7 +98,7 @@ class GeoMatcher:
                         ignore_index=True,
                     )
         else:
-            data["RATIO"] = data["FULL_ADRESS"].apply(
+            data["RATIO"] = data["FULL_ADDRESS"].apply(
                 lambda x: fuzz.ratio(
                     re.sub(r"[\W_]+", "", address.lower()),
                     re.sub(r"[\W_]+", "", x.lower()),
@@ -171,12 +171,11 @@ class GeoMatcher:
         )
 
         if isinstance(self._data, list):
-
             for data in self._data:
-                address = self._data.iloc[index, :]
+                address = data.iloc[index]
         else:
-            address = self._data.iloc[index, :]
+            address = self._data[index, :]
 
         for reg in lregions:
             if reg.col_name != "":
-                print(reg.name + ":" + address.loc[0, reg.col_name])
+                print(reg.name + ":" + address[reg.col_name])
