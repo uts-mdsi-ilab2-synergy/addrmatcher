@@ -156,7 +156,6 @@ class GeoMatcher:
         lregions = self._hierarchy.get_regions_by_name(
             operator=operator, name=region, names=regions
         )
-
         for reg in lregions:
             if reg.col_name != "":
                 print(reg.name + ":" + address[reg.col_name])

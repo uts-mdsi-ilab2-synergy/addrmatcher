@@ -137,7 +137,7 @@ class GeoMatcher:
         Z = R * math.sin(latitude)
         return (X, Y, Z)
 
-     def get_region_by_coordinates(self, lat, lon, regions=[], operator=None, region=""):
+    def get_region_by_coordinates(self, lat, lon, regions=[], operator=None, region=""):
 
         places = []
         addresses = pd.DataFrame()
@@ -156,8 +156,8 @@ class GeoMatcher:
                 tree = spatial.KDTree(places)
                 # Find the nearest point to the input
                 closest = tree.query([cartesian_coord], p=2)
-                
-                addresses = addresses.append(data.iloc[closest[1][0],:])
+
+                addresses = addresses.append(data.iloc[closest[1][0], :])
 
         else:
             self._data["CARTESIAN_COOR"] = self._data["CARTESIAN_COOR"].apply(
@@ -173,23 +173,23 @@ class GeoMatcher:
 
             # Get the index of the first nearest neighbour / point / row
             addresses = addresses.append(self._data.iloc[closest[1][0], :])
-       
+
         if addresses.shape[0] > 1:
             places = addresses["CARTESIAN_COOR"].tolist()
             # Build the tree
             tree = spatial.KDTree(places)
             # Find the nearest point to the input
-            closest = tree.query([cartesian_coord], p=2)         
-            
-            address = addresses.iloc[closest[1][0],:]
-            
+            closest = tree.query([cartesian_coord], p=2)
+
+            address = addresses.iloc[closest[1][0], :]
+
         else:
             address = address.append(addresses.iloc[0])
-        
+
         lregions = self._hierarchy.get_regions_by_name(
-                    operator=operator, name=region, names=regions
-                )
-        
+            operator=operator, name=region, names=regions
+        )
+
         for reg in lregions:
             if reg.col_name != "":
                 print(reg.name + ":" + address[reg.col_name])
