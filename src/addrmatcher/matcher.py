@@ -6,34 +6,34 @@ import multiprocessing as mp
 import pandas as pd
 import math
 import re
+import os
+import glob
+
 from scipy import spatial
 from ast import literal_eval
 
 
 class GeoMatcher:
 
-    __slot__ = ("_hierarchy", "_filename", "_chunksize", "_data")
+    __slot__ = ("_hierarchy", "_filename", "_data")
 
     def __init__(self, hierarchy, filename=""):
         self._hierarchy = hierarchy
 
+        #if no filename provided, look for the dataset in the default folder: data/[country]
         if isinstance(filename, str):
             if filename.strip() == "":
-                self._filename = "data/" + hierarchy.name + ".csv"
-
+                self._filename = glob.glob('data\\\\'+country+'\*.{}'.format('csv'))
         else:
             self._filename = filename
 
+        #load the dataset into the data frame
         if isinstance(self._filename, str):
             self._data = pd.read_csv(self._filename, dtype="str")
         else:
             self._data = []
             for file in self._filename:
                 self._data.append(pd.read_csv(file, dtype="str"))
-
-    # def _perform_address_matching(self, address, df, threshold):
-    #    df["RATIO"] = df["FULL_ADRESS"].apply(lambda x: fuzz.ratio(re.sub(r'[\W_]+', '', address.lower()), re.sub(r'[\W_]+', '', x.lower())))
-    #    return df[df["RATIO"] >= threshold*100.0]
 
     def get_region_by_address(
         self,
@@ -44,45 +44,22 @@ class GeoMatcher:
         operator=None,
         region="",
     ):
-        # pools = mp.Pool(self._pool)
+        """
+        perform address based matching and return the corresponding region
+        e.g. administrative level or statistical are
+        
+        :param string address: 
+        """
 
-        # if (len(self._data) > self._pool):
-        #    split = math.ceil(len(self._data)/self._pool)
-        #    addresses = pd.DataFrame()
-
-        #    for i in range(split):
-        #        concurrent_proc = []
-
-        #        for j in range(self._pool):
-        #            proc = pools.apply_async(self._perform_address_matching,[address,self._data[i*self._pool+j],similarity_threshold])
-        #            concurrent_proc.append(proc)
-
-        #        for proc in concurrent_proc:
-        #            df = proc.get(timeout=1200)
-        #            if (addresses.shape[0] == 0):
-        #                addresses = df
-        #            else:
-        #                addresses = addresses.append(df, ignore_index=True)
-        # else:
-
-        #    concurrent_proc = []
-        #    addresses = pd.DataFrame()
-
-        #    for df in self._data:
-        #        proc = pools.apply_async(self._perform_address_matching,[address,df,similarity_threshold])
-        #        concurrent_proc.append(proc)
-
-        #    for proc in concurrent_proc:
-        #        df = proc.get(timeout=1200)
-        #        if (addresses.shape[0] == 0):
-        #            addresses = df
-        #        else:
-        #            addresses = addresses.append(df, ignore_index=True)
-
+        #initiate the result
         addresses = pd.DataFrame()
 
+        #if datasets are stored in multiple file
         if isinstance(self._data, list):
 
+            #calculate the distance (Levenshtein Distance) between the input address
+            #and the entire reference addresses dataset
+            #[all special characters are removed]
             for data in self._data:
                 data["RATIO"] = data["FULL_ADDRESS"].apply(
                     lambda x: fuzz.ratio(
@@ -90,6 +67,10 @@ class GeoMatcher:
                         re.sub(r"[\W_]+", "", x.lower()),
                     )
                 )
+                               
+                #if similarity score is larger then the threshold,
+                #there is a possibility the addresses are similar
+                #will need to select the highest score later on
                 if addresses.shape[0] == 0:
                     addresses = data[data["RATIO"] >= similarity_threshold * 100.0]
                 else:
@@ -97,33 +78,57 @@ class GeoMatcher:
                         data[data["RATIO"] >= similarity_threshold * 100.0],
                         ignore_index=True,
                     )
+        #if datasets are stored in a single file
         else:
+            #calculate the distance (Levenshtein Distance) between the input address
+            #and the entire reference addresses dataset
+            #[all special characters are removed]
             self._data["RATIO"] = self._data["FULL_ADDRESS"].apply(
                 lambda x: fuzz.ratio(
                     re.sub(r"[\W_]+", "", address.lower()),
                     re.sub(r"[\W_]+", "", x.lower()),
                 )
             )
+            
+            #if similarity score is larger then the threshold,
+            #there is a possibility the addresses are similar
+            #will need to select the highest score later on
             addresses = self._data[self._data["RATIO"] >= similarity_threshold * 100.0]
+            
+        #get the regions that users selected
+        selected_regions = self._hierarchy.get_regions_by_name(
+            operator=operator, name=region, names=regions
+        )
+        
+        #get the columns only
+        selected_columns = []
+        for reg in selected_regions:
+            if reg not in selected_columns:
+                selected_columns.append(reg.col_name)
+        
+        #deleted later
+        selected_columns.append("FULL_ADDRESS")
+        selected_columns.append("RATIO")
+        
+        #remove empty element, if exists
+        selected_columns = list(filter(None, selected_columns))
 
+        #if there are possible similar address found
         if addresses.shape[0] > 0:
+            #return the most similar address only
             if top_result:
-                lregions = self._hierarchy.get_regions_by_name(
-                    operator=operator, name=region, names=regions
-                )
-                addresses = addresses.sort_values(by="RATIO", ascending=False)
-                for reg in lregions:
-                    if reg.col_name != "":
-                        print(reg.name + ":" + addresses.loc[0, reg.col_name])
+                
+                #sort the addresses based on the similarity score
+                addresses = addresses.sort_values(by="RATIO", ascending=False).reset_index(drop=True)
+                
+                return addresses.head(1)[selected_columns]
+            
+            #return all the similar addresses
             else:
-                lcolumns = self._hierarchy.get_regions_by_name(
-                    operator=operator, name=region, names=regions, attribute="col_name"
-                )
-                print(
-                    addresses[list(filter(None, lcolumns)) + ["RATIO"]].sort_values(
-                        by="RATIO", ascending=False
-                    )
-                )
+            
+                return addresses[selected_columns].sort_values(by="RATIO", ascending=False)
+        else:
+            return None
 
     def cartesian(self, latitude, longitude, elevation=0):
 
@@ -185,11 +190,14 @@ class GeoMatcher:
 
         else:
             address = address.append(addresses.iloc[0])
-
-        lregions = self._hierarchy.get_regions_by_name(
-            operator=operator, name=region, names=regions
-        )
-
-        for reg in lregions:
-            if reg.col_name != "":
-                print(reg.name + ":" + address[reg.col_name])
+            
+            
+        selected_columns = self._hierarchy.get_regions_by_name(operator = operator, name = region, names = regions, attribute="col_name")
+        
+        #deleted later
+        selected_columns.append("FULL_ADDRESS")
+        
+        #remove empty element, if exists
+        selected_columns = list(filter(None, selected_columns))
+        
+        return address[selected_columns]
