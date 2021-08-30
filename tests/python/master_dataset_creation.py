@@ -1,10 +1,24 @@
 import pandas as pd
+import math
 
 states = ["ACT", "NSW", "NT", "OT", "QLD", "SA", "TAS", "VIC", "WA"]
 
 au_ssc = pd.read_csv("SSC_2016_AUST.csv", dtype="str")
 
 # i = 0
+
+
+def cartesian(latitude, longitude, elevation=0):
+    # Convert to radians
+    latitude = latitude * (math.pi / 180)
+    longitude = longitude * (math.pi / 180)
+
+    R = 6371  # 6378137.0 + elevation  # relative to centre of the earth
+    X = R * math.cos(latitude) * math.cos(longitude)
+    Y = R * math.cos(latitude) * math.sin(longitude)
+    Z = R * math.sin(latitude)
+    return (X, Y, Z)
+
 
 for state in states:
     print("--" + state + "--")
