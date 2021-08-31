@@ -1,12 +1,13 @@
 from region import Region
 from hierarchy import GeoHierarchy
 from operator import lt, le, ge, gt
-
 from rapidfuzz import fuzz, utils
 import multiprocessing as mp
 import pandas as pd
 import math
 import re
+import os
+import glob
 
 from scipy import spatial
 from ast import literal_eval
@@ -14,28 +15,38 @@ from ast import literal_eval
 
 class GeoMatcher:
 
-    __slot__ = ("_hierarchy", "_filename", "_chunksize", "_data")
+    __slot__ = ("_hierarchy", "_filename", "_data")
 
     def __init__(self, hierarchy, filename=""):
         self._hierarchy = hierarchy
 
+        # if no filename provided, look for the dataset in the default folder: data/[country]
         if isinstance(filename, str):
             if filename.strip() == "":
-                self._filename = "data/" + hierarchy.name + ".csv"
-
+                self._filename = glob.glob(
+                    "data\\\\" + self._hierarchy.name + "\*.{}".format("csv")
+                )
         else:
             self._filename = filename
 
+        # load the dataset into the data frame
+        # the matcher only allows CSV or parquet file
         if isinstance(self._filename, str):
-            self._data = pd.read_csv(self._filename, dtype="str")
+            if self._filename.lower().endswith(".parquet"):
+                self._data = pd.read_parquet(self._filename)
+            elif self._filename.lower().endswith(".csv"):
+                self._data = pd.read_csv(self._filename, dtype="str")
+            else:
+                raise ValueError("Filename should be a CSV or a Parquet file")
         else:
             self._data = []
             for file in self._filename:
-                self._data.append(pd.read_csv(file, dtype="str"))
-
-    # def _perform_address_matching(self, address, df, threshold):
-    #    df["RATIO"] = df["FULL_ADRESS"].apply(lambda x: fuzz.ratio(re.sub(r'[\W_]+', '', address.lower()), re.sub(r'[\W_]+', '', x.lower())))
-    #    return df[df["RATIO"] >= threshold*100.0]
+                if file.lower().endswith(".parquet"):
+                    self._data.append(pd.read_parquet(file))
+                elif file.lower().endswith(".csv"):
+                    self._data.append(pd.read_csv(file, dtype="str"))
+                else:
+                    raise ValueError("Filename should be a CSV or a Parquet file")
 
     def get_region_by_address(
         self,
@@ -46,10 +57,22 @@ class GeoMatcher:
         operator=None,
         region="",
     ):
+        """
+        perform address based matching and return the corresponding region
+        e.g. administrative level or statistical are
+
+        :param string address:
+        """
+
+        # initiate the result
         addresses = pd.DataFrame()
 
+        # if datasets are stored in multiple file
         if isinstance(self._data, list):
 
+            # calculate the distance (Levenshtein Distance) between the input address
+            # and the entire reference addresses dataset
+            # [all special characters are removed]
             for data in self._data:
                 data["RATIO"] = data["FULL_ADDRESS"].apply(
                     lambda x: fuzz.ratio(
@@ -57,6 +80,10 @@ class GeoMatcher:
                         re.sub(r"[\W_]+", "", x.lower()),
                     )
                 )
+
+                # if similarity score is larger then the threshold,
+                # there is a possibility the addresses are similar
+                # will need to select the highest score later on
                 if addresses.shape[0] == 0:
                     addresses = data[data["RATIO"] >= similarity_threshold * 100.0]
                 else:
@@ -64,33 +91,61 @@ class GeoMatcher:
                         data[data["RATIO"] >= similarity_threshold * 100.0],
                         ignore_index=True,
                     )
+        # if datasets are stored in a single file
         else:
+            # calculate the distance (Levenshtein Distance) between the input address
+            # and the entire reference addresses dataset
+            # [all special characters are removed]
             self._data["RATIO"] = self._data["FULL_ADDRESS"].apply(
                 lambda x: fuzz.ratio(
                     re.sub(r"[\W_]+", "", address.lower()),
                     re.sub(r"[\W_]+", "", x.lower()),
                 )
             )
+
+            # if similarity score is larger then the threshold,
+            # there is a possibility the addresses are similar
+            # will need to select the highest score later on
             addresses = self._data[self._data["RATIO"] >= similarity_threshold * 100.0]
 
+        # get the regions that users selected
+        selected_regions = self._hierarchy.get_regions_by_name(
+            operator=operator, name=region, names=regions
+        )
+
+        # get the columns only
+        selected_columns = []
+        for reg in selected_regions:
+            if reg not in selected_columns:
+                selected_columns.append(reg.col_name)
+
+        # deleted later
+        selected_columns.append("FULL_ADDRESS")
+        selected_columns.append("RATIO")
+
+        # remove empty element, if exists
+        selected_columns = list(filter(None, selected_columns))
+
+        # if there are possible similar address found
         if addresses.shape[0] > 0:
+            # return the most similar address only
             if top_result:
-                lregions = self._hierarchy.get_regions_by_name(
-                    operator=operator, name=region, names=regions
-                )
-                addresses = addresses.sort_values(by="RATIO", ascending=False)
-                for reg in lregions:
-                    if reg.col_name != "":
-                        print(reg.name + ":" + addresses.loc[0, reg.col_name])
+
+                # sort the addresses based on the similarity score
+                addresses = addresses.sort_values(
+                    by="RATIO", ascending=False
+                ).reset_index(drop=True)
+
+                return addresses.head(1)[selected_columns]
+
+            # return all the similar addresses
             else:
-                lcolumns = self._hierarchy.get_regions_by_name(
-                    operator=operator, name=region, names=regions, attribute="col_name"
+
+                return addresses[selected_columns].sort_values(
+                    by="RATIO", ascending=False
                 )
-                print(
-                    addresses[list(filter(None, lcolumns)) + ["RATIO"]].sort_values(
-                        by="RATIO", ascending=False
-                    )
-                )
+        else:
+            return None
 
     def cartesian(self, latitude, longitude, elevation=0):
 
@@ -153,9 +208,14 @@ class GeoMatcher:
         else:
             address = address.append(addresses.iloc[0])
 
-        lregions = self._hierarchy.get_regions_by_name(
-            operator=operator, name=region, names=regions
+        selected_columns = self._hierarchy.get_regions_by_name(
+            operator=operator, name=region, names=regions, attribute="col_name"
         )
-        for reg in lregions:
-            if reg.col_name != "":
-                print(reg.name + ":" + address[reg.col_name])
+
+        # deleted later
+        selected_columns.append("FULL_ADDRESS")
+
+        # remove empty element, if exists
+        selected_columns = list(filter(None, selected_columns))
+
+        return address[selected_columns]
