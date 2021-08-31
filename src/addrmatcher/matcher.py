@@ -24,6 +24,8 @@ class GeoMatcher:
         if isinstance(filename, str):
             if filename.strip() == "":
                 self._filename = glob.glob('data\\\\'+self._hierarchy.name+'\*.{}'.format('csv'))
+            else:
+                self._filename = filename
         else:
             self._filename = filename
 
