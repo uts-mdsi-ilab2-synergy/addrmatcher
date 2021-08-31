@@ -28,13 +28,24 @@ class GeoMatcher:
             self._filename = filename
 
         #load the dataset into the data frame
+        #the matcher only allows CSV or parquet file
         if isinstance(self._filename, str):
-            self._data = pd.read_csv(self._filename, dtype="str")
+            if self._filename.lower().endswith('.parquet'):
+                self._data = pd.read_parquet(self._filename)
+            elif self._filename.lower().endswith('.csv'):
+                self._data = pd.read_csv(self._filename, dtype='str')
+            else:
+                raise ValueError("Filename should be a CSV or a Parquet file")
         else:
             self._data = []
             for file in self._filename:
-                self._data.append(pd.read_csv(file, dtype="str"))
-
+                if file.lower().endswith('.parquet'):
+                    self._data.append(pd.read_parquet(file))
+                elif file.lower().endswith('.csv'):
+                    self._data.append(pd.read_csv(file, dtype='str'))
+                else:
+                    raise ValueError("Filename should be a CSV or a Parquet file")
+ 
     def get_region_by_address(
         self,
         address,
