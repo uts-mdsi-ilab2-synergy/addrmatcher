@@ -23,7 +23,7 @@ class GeoMatcher:
         #if no filename provided, look for the dataset in the default folder: data/[country]
         if isinstance(filename, str):
             if filename.strip() == "":
-                self._filename = glob.glob('data\\\\'+country+'\*.{}'.format('csv'))
+                self._filename = glob.glob('data\\\\'+self._hierarchy.name+'\*.{}'.format('csv'))
         else:
             self._filename = filename
 
