@@ -1,13 +1,14 @@
 import pandas as pd
 import math
+from numpy import nanmin,nanmax
 
 #maximum number of records in a parquet file (except the index file)
 max_rows = 500000
-#states = ["ACT", "NSW", "NT", "OT", "QLD", "SA", "TAS", "VIC", "WA"]
-states = ["ACT", "WA"]
+states = ["ACT", "NSW", "NT", "OT", "QLD", "SA", "TAS", "VIC", "WA"]
+#states = ["ACT", "WA"]
 
 #initiate the index file
-index_file = pd.DataFrame(columns=['IDX','STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE','FILE_NAME','ADDRESS_COUNT'])
+index_file = pd.DataFrame(columns=['IDX','STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE','FILE_NAME','ADDRESS_COUNT','MIN_STREET_NUMBER','MAX_STREET_NUMBER'])
 index = 0
 
 #suburb
@@ -168,13 +169,50 @@ for state in states:
                             .to_frame(name = 'ADDRESS_COUNT')\
                             .sort_values(by='ADDRESS_COUNT', ascending = False)\
                             .reset_index()
+                            
+    #get street number without non numeric characters
+    gnaf_address_combined["NUMBER_FIRST_NUM"] = gnaf_address_combined["NUMBER_FIRST"].str.extract('(\d+)', expand=False)
+    gnaf_address_combined['NUMBER_FIRST_NUM'] = gnaf_address_combined['NUMBER_FIRST_NUM'].astype(float)
+    
+    
+    #get minimum street number
+    gnaf_address_combined_min = (gnaf_address_combined
+                                    .groupby(['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE'])
+                                    .agg({'NUMBER_FIRST_NUM':nanmin})
+                                    .reset_index()
+                                    .rename(columns={'NUMBER_FIRST_NUM':'MIN_STREET_NUMBER'}))
+                                    
+    gnaf_address_combined_min.loc[pd.notnull(gnaf_address_combined_min['MIN_STREET_NUMBER']),'MIN_STREET_NUMBER'] = (gnaf_address_combined_min
+                                                                                                .loc[pd.notnull(gnaf_address_combined_min['MIN_STREET_NUMBER']),'MIN_STREET_NUMBER']
+                                                                                                .astype(int)
+                                                                                                .astype(str))
+    
+    #get maximum street number
+    gnaf_address_combined_max = (gnaf_address_combined
+                                    .groupby(['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE'])
+                                    .agg({'NUMBER_FIRST_NUM':nanmax})
+                                    .reset_index()
+                                    .rename(columns={'NUMBER_FIRST_NUM':'MAX_STREET_NUMBER'}))
+                                    
+    gnaf_address_combined_max.loc[pd.notnull(gnaf_address_combined_max['MAX_STREET_NUMBER']),'MAX_STREET_NUMBER'] = (gnaf_address_combined_max
+                                                                                                .loc[pd.notnull(gnaf_address_combined_max['MAX_STREET_NUMBER']),'MAX_STREET_NUMBER']
+                                                                                                .astype(int)
+                                                                                                .astype(str))
+
+    #merge the index with min and max
+    gnaf_address_index = (gnaf_address_index.merge(gnaf_address_combined_min, 
+                                                    how = 'left',
+                                                    on = ['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE'])
+                                            .merge(gnaf_address_combined_max, 
+                                                    how = 'left',
+                                                    on = ['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE']))
     
     #if a state has less than max rows, then create a single file to store the state's addresses
     if gnaf_address_combined.shape[0] <= max_rows:
         #set the parquet filename
         filename = state+"-1.parquet"
         
-        state_idx_file = gnaf_address_index[['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE','ADDRESS_COUNT']]
+        state_idx_file = gnaf_address_index[['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE','ADDRESS_COUNT','MIN_STREET_NUMBER','MAX_STREET_NUMBER']]
         state_idx_file.insert(0, 'IDX', range(index + 1, index + 1 + len(state_idx_file)))
         state_idx_file.insert(6, 'FILE_NAME', filename)
         
@@ -210,6 +248,7 @@ for state in states:
         
         #save into parquet
         gnaf_address_combined[[ 'IDX',
+                                'STREET_LOCALITY_PID',
                                 'FULL_ADDRESS',
                                 'LATITUDE',
                                 'LONGITUDE',
@@ -234,7 +273,7 @@ for state in states:
         nb_files = 1
         filename = state+"-"+str(nb_files)+".parquet"
         
-        state_idx_file = gnaf_address_index[['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE','ADDRESS_COUNT']]
+        state_idx_file = gnaf_address_index[['STREET_NAME','STREET_TYPE_CODE','LOCALITY_NAME','STATE','POSTCODE','ADDRESS_COUNT','MIN_STREET_NUMBER','MAX_STREET_NUMBER']]
         state_idx_file.insert(0, 'IDX', range(index + 1, index + 1 + len(state_idx_file)))
         state_idx_file.insert(6, 'FILE_NAME', "")
         
@@ -258,6 +297,7 @@ for state in states:
                                                 
                 gnaf_address_split['FILE_NAME'] = filename                                
                 gnaf_address_split[['IDX',
+                                    'STREET_LOCALITY_PID',
                                     'FULL_ADDRESS',
                                     'LATITUDE',
                                     'LONGITUDE',
@@ -301,6 +341,7 @@ for state in states:
         
         gnaf_address_split['FILE_NAME'] = filename          
         gnaf_address_split[['IDX',
+                            'STREET_LOCALITY_PID',
                             'FULL_ADDRESS',
                             'LATITUDE',
                             'LONGITUDE',
