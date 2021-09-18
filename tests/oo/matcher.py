@@ -8,8 +8,11 @@ import math
 import re
 import os
 import glob
+import numpy as np
+from pyarrow import fs
+import pyarrow.parquet as pq
+from sklearn.neighbors import BallTree
 
-from scipy import spatial
 from ast import literal_eval
 
 
@@ -20,12 +23,38 @@ class GeoMatcher:
     def __init__(self, hierarchy, filename=""):
         self._hierarchy = hierarchy
 
+        ## Interested Dimensions in the GNAF Files
+        self._interested_dims = [
+            "LATITUDE",
+            "LONGITUDE",
+            "FULL_ADDRESS",
+            "STATE",
+            "SA4_NAME_2016",
+            "LGA_NAME_2016",
+            "SSC_NAME_2016",
+            "SA3_NAME_2016",
+            "SA2_NAME_2016",
+            "ADDRESS_DETAIL_PID",
+        ]
+
+        self._au_cor_range = {
+            "lat_min": -43.58301104,
+            "lat_max": -9.23000371,
+            "lon_min": 96.82159219,
+            "lon_max": 167.99384663,
+        }
+
+        # 1 lat equals 110.574km # Conversion Rate - radians to kilometer
+        self._conversion = {"lat_to_km": 110.574, "rad_to_km": 6371}
+
         # if no filename provided, look for the dataset in the default folder: data/[country]
         if isinstance(filename, str):
             if filename.strip() == "":
                 self._filename = glob.glob(
                     "data\\\\" + self._hierarchy.name + "\*.{}".format("csv")
                 )
+            else:
+                self._filename = filename
         else:
             self._filename = filename
 
@@ -147,19 +176,19 @@ class GeoMatcher:
         else:
             return None
 
-    def cartesian(self, latitude, longitude, elevation=0):
+        # def cartesian(self, latitude, longitude, elevation=0):
 
-        # Convert to radians
-        latitude = latitude * (math.pi / 180)
-        longitude = longitude * (math.pi / 180)
+        #     # Convert to radians
+        #     latitude = latitude * (math.pi / 180)
+        #     longitude = longitude * (math.pi / 180)
 
-        R = 6371  # 6378137.0 + elevation  # relative to centre of the earth
-        X = R * math.cos(latitude) * math.cos(longitude)
-        Y = R * math.cos(latitude) * math.sin(longitude)
-        Z = R * math.sin(latitude)
-        return (X, Y, Z)
+        #     R = 6371  # 6378137.0 + elevation  # relative to centre of the earth
+        #     X = R * math.cos(latitude) * math.cos(longitude)
+        #     Y = R * math.cos(latitude) * math.sin(longitude)
+        #     Z = R * math.sin(latitude)
+        #     return (X, Y, Z)
 
-    def get_region_by_coordinates(self, lat, lon, regions=[], operator=None, region=""):
+        # def get_region_by_coordinates(self, lat, lon, regions=[], operator=None, region=""):
 
         places = []
         addresses = pd.DataFrame()
@@ -219,3 +248,102 @@ class GeoMatcher:
         selected_columns = list(filter(None, selected_columns))
 
         return address[selected_columns]
+
+    def load_parquet(self, lat, lon, distance):
+
+        local = fs.LocalFileSystem()
+        df = pq.read_table(
+            self._filename,
+            filesystem=local,
+            columns=self._interested_dims,
+            filters=[
+                ("LATITUDE", ">=", lat - distance),
+                ("LATITUDE", "<=", lat + distance),
+                ("LONGITUDE", ">=", lon - distance),
+                ("LONGITUDE", "<=", lon + distance),
+            ],
+        ).to_pandas()
+
+        return df
+
+    def ensure_lat_lon_within_range(self, lat, lon):
+
+        lat_min, lat_max, lon_min, lon_max = self._au_cor_range.values()
+
+        # Ensure Latitudge within the AU range
+        lat = max(lat, lat_min)
+        lat = min(lat, lat_max)
+
+        # Ensure longitutde within the AU range
+        lon = max(lon, lon_min)
+        lon = min(lon, lon_max)
+
+        return lat, lon
+
+    def filter_for_rows_within_mid_distance(df, lat, lon, mid_distance):
+
+        mid_df = df[
+            df.LATITUDE.between(lat - mid_distance, lat + mid_distance)
+            & df.LONGITUDE.between(lon - mid_distance, lon + mid_distance)
+        ]
+
+        return mid_df
+
+    def get_region_by_coordinates(
+        self, lat, lon, n=1, km=1, regions=[], operator=None, region=""
+    ):
+
+        min_distance = 0
+        lat_to_km, rad_to_km = self._conversion.values()
+        distance = (km if km else 1) / lat_to_km
+
+        ## 1. Initial distance setting according to lat/lon arguments to ensure lat/lon within AU range
+        lat, lon = self.ensure_lat_lon_within_range(lat, lon)
+
+        ## 2. Make the first load of GNAF dataset
+        gnaf_df = self.load_parquet(lat, lon, distance)
+
+        # 2.a If the desired count of addresses not exist, increase the radius
+        while gnaf_df.shape[0] < n:
+            min_distance = distance
+            distance *= 2
+
+            gnaf_df = self.load_parquet(lat, lon, distance)
+            print("gnaf_df.shape: First Load: ", gnaf_df.shape)
+
+        # 2.b Keep reducing the size of rows if more than 10k adddresses are found within the radius
+        # Take the median distance to reduce
+        # This is to limit the number of datapoint to build the Ball tree in the next step
+        while gnaf_df.shape[0] >= n + 10000:
+            middle_distance = (distance - min_distance) / 2
+            gnaf_df = self.filter_for_rows_within_mid_distance(
+                gnaf_df, lat, lon, middle_distance
+            )
+            print("gnaf_df.shape: Reduced Load: ", gnaf_df.shape)
+            distance = middle_distance
+        print("gnaf_df.shape: Final Load: ", gnaf_df.shape)
+
+        ## 3. Build the Ball Tree and Query for the nearest within k distance
+        ball_tree = BallTree(
+            np.deg2rad(gnaf_df[["LATITUDE", "LONGITUDE"]].values), metric="haversine"
+        )
+        distances, indices = ball_tree.query(
+            np.deg2rad(np.c_[lat, lon]), k=min(n, gnaf_df.shape[0])
+        )
+        # Get indices of the search result, Extract pid and calculate distance(km)
+        indices = indices[0].tolist()
+        pids = gnaf_df.ADDRESS_DETAIL_PID.iloc[indices].tolist()
+        distance_map = dict(
+            zip(pids, [distance * rad_to_km for distance in distances[0]])
+        )
+
+        ## 4. Filter the GNAF dataset by address_detail_pid and Extract the interested columns
+        bool_list = gnaf_df["ADDRESS_DETAIL_PID"].isin(pids)
+        final_gnaf_df = gnaf_df[bool_list]
+
+        final_gnaf_df = final_gnaf_df[self.interested_dims]
+        final_gnaf_df["DISTANCE"] = final_gnaf_df["ADDRESS_DETAIL_PID"].map(
+            distance_map
+        )
+
+        return final_gnaf_df.sort_values("DISTANCE")
