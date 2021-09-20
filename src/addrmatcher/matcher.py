@@ -14,7 +14,7 @@ from ast import literal_eval
 
 class GeoMatcher:
 
-    __slot__ = ("_hierarchy", "_file_location","_index_data")
+    __slot__ = ("_hierarchy", "_file_location","_index_data", "_filename")
 
     def __init__(self, hierarchy, file_location=""):
         self._hierarchy = hierarchy
@@ -32,13 +32,13 @@ class GeoMatcher:
                 raise ValueError("Folder name that contain index file can't be found: "+file_location)
         
         #get all the parquet filenames within the folder 
-        files = glob.glob(self._file_location+'\*.{}'.format('parquet'))
+        self._filename = glob.glob(self._file_location+'\*.{}'.format('parquet'))
         
         #init
         index_file = "index.parquet"
         
         #check if the index file exists
-        if self._file_location+"\\"+index_file not in files:
+        if self._file_location+"\\"+index_file not in self._filename:
             raise ValueError("Index file ("+index_file+") can't be found in: "+self._file_location)
         
         #read the index file
