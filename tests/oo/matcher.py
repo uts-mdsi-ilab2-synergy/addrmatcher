@@ -310,9 +310,7 @@ class GeoMatcher:
         # Get indices of the search result, Extract pid and calculate distance(km)
         indices = indices[0].tolist()
         pids = gnaf_df.ADDRESS_DETAIL_PID.iloc[indices].tolist()
-        distance_map = dict(
-            zip(pids, [distance * 110.574 for distance in distances[0]])
-        )
+        distance_map = dict(zip(pids, [distance * 6371 for distance in distances[0]]))
 
         ## 4. Filter the GNAF dataset by address_detail_pid
         bool_list = gnaf_df["ADDRESS_DETAIL_PID"].isin(pids)
