@@ -47,6 +47,9 @@ class GeoMatcher:
         #check the availability of required column name
         if not {'IDX','ADDRESS','FILE_NAME'}.issubset(self._index_data.columns):
             raise ValueError("The required columns can't be found in the index file: IDX, ADDRESS, FILE_NAME")
+        
+        #remove index file from the lists
+        self._filename.remove(self._file_location+"\\"+index_file)
  
     def get_region_by_address(
         self,
