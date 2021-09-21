@@ -2,7 +2,6 @@ from region import Region
 from hierarchy import GeoHierarchy
 from operator import lt, le, ge, gt
 from rapidfuzz import fuzz, utils
-import multiprocessing as mp
 import pandas as pd
 import math
 import re
@@ -15,38 +14,39 @@ from ast import literal_eval
 
 class GeoMatcher:
 
-    __slot__ = ("_hierarchy", "_filename", "_data")
+    __slot__ = ("_hierarchy", "_file_location","_index_data", "_filename")
 
-    def __init__(self, hierarchy, filename=""):
+    def __init__(self, hierarchy, file_location=""):
         self._hierarchy = hierarchy
 
-        #if no filename provided, look for the dataset in the default folder: data/[country]
-        if isinstance(filename, str):
-            if filename.strip() == "":
-                self._filename = glob.glob('data\\\\'+self._hierarchy.name+'\*.{}'.format('csv'))
+        #if no file location provided, look for the dataset in the default folder: data/[country]
+        if file_location.strip() == "":
+            if os.path.isdir(os.path.join("data\\",self._hierarchy.name)):
+                self._file_location = os.path.join("data\\",self._hierarchy.name)
             else:
-                self._filename = filename
+                raise ValueError("Folder name that contain index file can't be found: "+os.path.join("data\\",self._hierarchy.name))
         else:
-            self._filename = filename
-
-        #load the dataset into the data frame
-        #the matcher only allows CSV or parquet file
-        if isinstance(self._filename, str):
-            if self._filename.lower().endswith('.parquet'):
-                self._data = pd.read_parquet(self._filename)
-            elif self._filename.lower().endswith('.csv'):
-                self._data = pd.read_csv(self._filename, dtype='str')
+            if os.path.isdir(file_location):
+                self._file_location = file_location
             else:
-                raise ValueError("Filename should be a CSV or a Parquet file")
-        else:
-            self._data = []
-            for file in self._filename:
-                if file.lower().endswith('.parquet'):
-                    self._data.append(pd.read_parquet(file))
-                elif file.lower().endswith('.csv'):
-                    self._data.append(pd.read_csv(file, dtype='str'))
-                else:
-                    raise ValueError("Filename should be a CSV or a Parquet file")
+                raise ValueError("Folder name that contain index file can't be found: "+file_location)
+        
+        #get all the parquet filenames within the folder 
+        self._filename = glob.glob(self._file_location+'\*.{}'.format('parquet'))
+        
+        #init
+        index_file = "index.parquet"
+        
+        #check if the index file exists
+        if self._file_location+"\\"+index_file not in self._filename:
+            raise ValueError("Index file ("+index_file+") can't be found in: "+self._file_location)
+        
+        #read the index file
+        self._index_data = pd.read_parquet(self._file_location+"\\"+index_file)
+        
+        #check the availability of required column name
+        if not {'IDX','ADDRESS','FILE_NAME'}.issubset(self._index_data.columns):
+            raise ValueError("The required columns can't be found in the index file: IDX, ADDRESS, FILE_NAME")
  
     def get_region_by_address(
         self,
