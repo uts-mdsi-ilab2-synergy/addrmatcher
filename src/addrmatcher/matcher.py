@@ -126,9 +126,13 @@ class GeoMatcher:
         no_number_address = no_number_address.replace(",", "").strip().upper()
         #replace the street suffix abbreviation with the street suffix name 
         #and remove the extra spaces 
-        no_number_address = ' '.join([self._street_code_dict.get(item,item) for item in no_number_address.split()])
-
-        return no_number_address
+        address_parts = no_number_address.split()
+        
+        if address_parts[0] == 'ST':
+            address_parts.pop(0)
+            return 'ST '+' '.join([self._street_code_dict.get(item,item) for item in address_parts])
+        else:
+            return ' '.join([self._street_code_dict.get(item,item) for item in address_parts])
         
         
     def _cleaning_match_with_index(self, no_number_address):
@@ -267,7 +271,7 @@ class GeoMatcher:
             #perform further cleaning
             clean_address = self._cleaning_address(clean_address)
         
-        print(clean_address)
+        #print(clean_address)
         
         #match with the index
         if (self._index_data is not None) and (self._index_data.shape[0] > 0):
