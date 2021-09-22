@@ -15,7 +15,7 @@ sa2 = Region("Statistical Area 2","SA2","SA2_NAME_2016")
 sa1 = Region("Statistical Area 1","SA1","SA1_7DIGITCODE_2016")
 
 #meshblock
-mb = Region("Meshblock","MB","MB_2016")
+mb = Region("Meshblock","MB","MB_CODE_2016")
 
 AUS = GeoHierarchy(country,"Australia")
 
