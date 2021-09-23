@@ -14,13 +14,7 @@ sa3 = Region("Statistical Area 3", "SA3", "SA3_NAME_2016")
 sa2 = Region("Statistical Area 2", "SA2", "SA2_NAME_2016")
 sa1 = Region("Statistical Area 1", "SA1", "SA1_7DIGITCODE_2016")
 
-<<<<<<< HEAD
-# meshblock
-mb = Region("Meshblock", "MB", "MB_2016")
-=======
-#meshblock
 mb = Region("Meshblock","MB","MB_CODE_2016")
->>>>>>> fa88568380a21d6dcf3bd9ac771268e586d5c4b1
 
 AUS = GeoHierarchy(country, "Australia")
 
@@ -38,5 +32,7 @@ AUS.add_region(region=sa2, parent_region=sa3)
 AUS.add_region(region=sa1, parent_region=sa2)
 AUS.add_region(region=mb, parent_region=sa1)
 
-AUS.add_type(lga, "Administrative")
-AUS.add_type(sa4, "ASGS", "Australian Statistical Geography Standard")
+AUS.add_type(lga,"Administrative")
+AUS.add_type(sa4,"ASGS","Australian Statistical Geography Standard")
+
+AUS.coordinate_boundary = [-43.58301104,-9.23000371, 96.82159219, 167.99384663]
