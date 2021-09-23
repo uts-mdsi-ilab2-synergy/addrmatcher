@@ -3,13 +3,15 @@ from operator import lt, le, ge, gt
         
 class GeoHierarchy:
 
-    __slot__ = ("_type","_type_root","_country", "_country_name")
+    __slot__ = ("_type","_type_root","_country", "_country_name", "_coordinate_boundary")
     
-    def __init__(self, country, name):
+    def __init__(self, country, name, coordinate_boundary = None):
         self._type = {}
         self._type_root = {}
         self._country = self._Node(country)
         self._country_name = name
+        self.coordinate_boundary = coordinate_boundary
+        
     
     @property
     def type(self):
@@ -18,6 +20,24 @@ class GeoHierarchy:
     @property
     def name(self):
         return self._country_name
+        
+    @property
+    def coordinate_boundary(self):
+        return self._coordinate_boundary
+        
+    @coordinate_boundary.setter
+    def coordinate_boundary(self, value):
+        if value is not None:
+            if isinstance(value,list) and len(value):
+                if (value[0] < value[1]) and (value[2] < value[3]):
+                    self._coordinate_boundary = value
+                else:
+                    if value[0] >= value[1]:
+                        raise ValueError("The latitute range is invalid (lat_max >= lat_min)")
+                    else:
+                        raise ValueError("The longitude range is invalid (long_max >= long_min)")
+            else:
+                raise ValueError("The boundary must be a four element list [lat_min, lat_max, long_min, long_max]")
     
     def add_type(self, region, type_id, type_name = ""):
         """
