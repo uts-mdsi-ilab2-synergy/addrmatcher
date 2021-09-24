@@ -6,6 +6,7 @@ import sys
 from colorama import Fore, Style
 import argparse
 
+
 color_code = {
     "default": "",
     "red": Fore.RED,
