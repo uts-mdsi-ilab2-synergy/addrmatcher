@@ -73,7 +73,6 @@ def download_data(flatten=False, output_dir=CWD):
 
     # generate the url which returns the JSON data
     api_url, download_dirs = create_url(repo_url)
-    print(output_dir)
     # To handle file names.
     if not flatten:
         print("Not Flattern")
