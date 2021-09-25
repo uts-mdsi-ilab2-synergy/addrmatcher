@@ -1,4 +1,4 @@
-from region import Region
+from .region import Region
 from operator import lt, le, ge, gt
         
 class GeoHierarchy:

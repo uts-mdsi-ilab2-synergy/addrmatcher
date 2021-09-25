@@ -31,12 +31,12 @@ class GeoMatcher:
 
         # if no file location provided, look for the dataset in the default folder: data/[country]
         if file_location.strip() == "":
-            if os.path.isdir(os.path.join("data\\", self._hierarchy.name)):
-                self._file_location = os.path.join("data\\", self._hierarchy.name)
+            if os.path.isdir(os.path.join("data", self._hierarchy.name)):
+                self._file_location = os.path.join("data", self._hierarchy.name)
             else:
                 raise ValueError(
                     "Folder names that contain the index file can't be found: "
-                    + os.path.join("data\\", self._hierarchy.name)
+                    + os.path.join("data", self._hierarchy.name)
                 )
         else:
             if os.path.isdir(file_location):
@@ -48,13 +48,13 @@ class GeoMatcher:
                 )
 
         # get all the parquet filenames within the folder
-        self._filename = glob.glob(self._file_location + "\*.{}".format("parquet"))
+        self._filename = glob.glob(os.path.join(self._file_location, "*".format("parquet"))
 
         # init
         index_file = "index.parquet"
 
         # check if the index file exists
-        if self._file_location + "\\" + index_file not in self._filename:
+        if os.path.join(self._file_location, index_file) not in self._filename:
             raise ValueError(
                 "Index file ("
                 + index_file
@@ -63,7 +63,7 @@ class GeoMatcher:
             )
 
         # read the index file
-        self._index_data = pd.read_parquet(self._file_location + "\\" + index_file)
+        self._index_data = pd.read_parquet(os.path.join(self._file_location, index_file))
 
         # check the availability of required column name
         idx_columns = ["IDX", "ADDRESS", "FILE_NAME"]
@@ -74,7 +74,7 @@ class GeoMatcher:
             )
 
         # remove index file from the lists
-        self._filename.remove(self._file_location + "\\" + index_file)
+        self._filename.remove(os.path.join(self._file_location,  index_file))
 
         # check parquet file schema (ensure all of the required columns are exist)
         # get the regions that users selected
@@ -383,10 +383,10 @@ class GeoMatcher:
                 parquet_filename = clean_address_idx["FILE_NAME"].values[0]
                 parquet_idx = clean_address_idx["IDX"].values[0]
 
-            if os.path.isfile(self._file_location + "\\" + parquet_filename):
+            if os.path.isfile(os.path.join(self._file_location, parquet_filename)):
                 # read the parquet file where the IDX and address are stored
                 address_parquet = pq.read_table(
-                    self._file_location + "\\" + parquet_filename,
+                    os.path.join(self._file_location, parquet_filename),
                     filesystem=fs.LocalFileSystem(),
                     filters=[("IDX", "=", parquet_idx)],
                 ).to_pandas()
