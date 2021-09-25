@@ -48,7 +48,7 @@ class GeoMatcher:
                 )
 
         # get all the parquet filenames within the folder
-        self._filename = glob.glob(os.path.join(self._file_location, "*".format("parquet"))
+        self._filename = glob.glob(os.path.join(self._file_location, "*".format("parquet")))
 
         # init
         index_file = "index.parquet"
