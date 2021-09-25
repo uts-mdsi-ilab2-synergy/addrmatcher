@@ -11,8 +11,6 @@ from pyarrow import fs
 import pyarrow.parquet as pq
 from sklearn.neighbors import BallTree
 import numpy as np
-
-from scipy import spatial
 from ast import literal_eval
 
 

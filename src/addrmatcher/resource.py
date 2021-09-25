@@ -5,6 +5,7 @@ import os
 import sys
 from colorama import Fore, Style
 import argparse
+import signal
 
 CWD = os.path.abspath(os.getcwd())
 
@@ -121,7 +122,7 @@ def download_data(flatten=False, output_dir=CWD):
                     data["download_url"], os.path.join(dir_out, data["name"])
                 )
                 # bring the cursor to the beginning, erase the current line, and dont make a new line
-                self.print_text(
+                print_text(
                     "Downloaded====: " + Fore.WHITE + "{}".format(data["name"]),
                     "green",
                     in_place=True,
@@ -131,7 +132,7 @@ def download_data(flatten=False, output_dir=CWD):
             except KeyboardInterrupt:
                 # when CTRL+C is pressed during the execution of this script,
                 # bring the cursor to the beginning, erase the current line, and dont make a new line
-                self.print_text("✘ Got interrupted", "red", in_place=False)
+                print_text("✘ Got interrupted", "red", in_place=False)
                 sys.exit()
 
         for file in data:
@@ -179,9 +180,9 @@ def download_data(flatten=False, output_dir=CWD):
 
 def download():
 
-    # if sys.platform != "win32":
-    #     # disbale CTRL+Z
-    #     signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+    if sys.platform != "win32":
+        # disbale CTRL+Z
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
     parser = argparse.ArgumentParser(
         description="Download directories/folders from GitHub"
@@ -192,7 +193,7 @@ def download():
         "--output_dir",
         "-d",
         dest="output_dir",
-        default= CWD,
+        default=CWD,
         help="All directories will be downloaded to the specified directory.",
     )
 
