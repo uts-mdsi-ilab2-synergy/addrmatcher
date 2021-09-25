@@ -6,6 +6,7 @@ import sys
 from colorama import Fore, Style
 import argparse
 
+CWD = os.path.abspath(os.getcwd())
 
 color_code = {
     "default": "",
@@ -65,14 +66,14 @@ def create_url(url):
     return api_url, download_dirs
 
 
-def download_data(flatten=False, output_dir="./"):
+def download_data(flatten=False, output_dir=CWD):
     """Downloads the files and directories in repo_url.
     If flatten is specified, the contents of any and all
     sub-directories will be pulled upwards into the root folder."""
 
     # generate the url which returns the JSON data
     api_url, download_dirs = create_url(repo_url)
-
+    print(output_dir)
     # To handle file names.
     if not flatten:
         print("Not Flattern")
@@ -179,9 +180,9 @@ def download_data(flatten=False, output_dir="./"):
 
 def download():
 
-    if sys.platform != "win32":
-        # disbale CTRL+Z
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+    # if sys.platform != "win32":
+    #     # disbale CTRL+Z
+    #     signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
     parser = argparse.ArgumentParser(
         description="Download directories/folders from GitHub"
@@ -192,7 +193,7 @@ def download():
         "--output_dir",
         "-d",
         dest="output_dir",
-        default="./",
+        default= CWD,
         help="All directories will be downloaded to the specified directory.",
     )
 
@@ -208,10 +209,9 @@ def download():
 
     flatten = args.flatten
 
-    total_files = download_data(flatten, args.output_dir)
-
+    download_data(flatten, args.output_dir)
     print_text("✔ Download complete", "green", in_place=True)
 
 
-# if __name__ == "__main__":
-#     download()
+if __name__ == "__main__":
+    download()
