@@ -173,7 +173,7 @@ def download_data(flatten=False, output_dir=CWD):
                     print_text("✘ Got interrupted", "red", in_place=False)
                     sys.exit()
             else:
-                download(file["html_url"], flatten, dir_out)
+                download_data(file["html_url"], flatten, dir_out)
 
     return total_files
 
