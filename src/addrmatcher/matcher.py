@@ -3,7 +3,6 @@ from .hierarchy import GeoHierarchy
 from operator import lt, le, ge, gt
 from rapidfuzz import fuzz
 import pandas as pd
-import math
 import re
 import os
 import glob
@@ -11,8 +10,6 @@ from pyarrow import fs
 import pyarrow.parquet as pq
 from sklearn.neighbors import BallTree
 import numpy as np
-
-from scipy import spatial
 from ast import literal_eval
 
 
@@ -48,7 +45,9 @@ class GeoMatcher:
                 )
 
         # get all the parquet filenames within the folder
-        self._filename = glob.glob(os.path.join(self._file_location, "*".format("parquet"))
+        self._filename = glob.glob(
+            os.path.join(self._file_location, "*".format("parquet"))
+        )
 
         # init
         index_file = "index.parquet"
@@ -63,7 +62,9 @@ class GeoMatcher:
             )
 
         # read the index file
-        self._index_data = pd.read_parquet(os.path.join(self._file_location, index_file))
+        self._index_data = pd.read_parquet(
+            os.path.join(self._file_location, index_file)
+        )
 
         # check the availability of required column name
         idx_columns = ["IDX", "ADDRESS", "FILE_NAME"]
@@ -74,7 +75,7 @@ class GeoMatcher:
             )
 
         # remove index file from the lists
-        self._filename.remove(os.path.join(self._file_location,  index_file))
+        self._filename.remove(os.path.join(self._file_location, index_file))
 
         # check parquet file schema (ensure all of the required columns are exist)
         # get the regions that users selected
