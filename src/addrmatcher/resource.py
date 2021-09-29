@@ -67,23 +67,29 @@ def create_url(url):
     return api_url, download_dirs
 
 
-def download_data(flatten=False, output_dir=CWD):
+def download_data(country="Australia", output_dir=CWD):
     """Downloads the files and directories in repo_url.
     If flatten is specified, the contents of any and all
     sub-directories will be pulled upwards into the root folder."""
 
+    repo_url = (
+        "https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/tree/main/data/"
+        + country
+        + "/"
+    )
+
     # generate the url which returns the JSON data
     api_url, download_dirs = create_url(repo_url)
+
     # To handle file names.
-    if not flatten:
-        print("Not Flattern")
-        if len(download_dirs.split(".")) == 0:
-            dir_out = os.path.join(output_dir, download_dirs)
-        else:
-            print("length ", len(download_dirs.split(".")))
-            dir_out = os.path.join(output_dir, "/".join(download_dirs.split("/")[:-1]))
+    if len(download_dirs.split(".")) == 0:
+        dir_out = os.path.join(output_dir, download_dirs)
     else:
-        dir_out = output_dir
+        print("length ", len(download_dirs.split(".")))
+        dir_out = os.path.join(output_dir, "/".join(download_dirs.split("/")[:-1]))
+
+    # make a directory with the name which is taken from the actual repo
+    os.makedirs(dir_out, exist_ok=True)
 
     try:
         opener = request.build_opener()
@@ -96,15 +102,10 @@ def download_data(flatten=False, output_dir=CWD):
         print_text("✘ Got interrupted", "red", in_place=True)
         sys.exit()
 
-    if not flatten:
-        print("Not Flattern")
-        # make a directory with the name which is taken from
-        # the actual repo
-        os.makedirs(dir_out, exist_ok=True)
-
     # total files count
     total_files = 0
 
+    ## Writing inot file
     with open(response[0], "r") as f:
         data = json.load(f)
         # getting the total number of files so that we
@@ -127,8 +128,8 @@ def download_data(flatten=False, output_dir=CWD):
                     "green",
                     in_place=True,
                 )
-
                 return total_files
+
             except KeyboardInterrupt:
                 # when CTRL+C is pressed during the execution of this script,
                 # bring the cursor to the beginning, erase the current line, and dont make a new line
@@ -139,11 +140,9 @@ def download_data(flatten=False, output_dir=CWD):
             file_url = file["download_url"]
             file_name = file["name"]
 
-            if flatten:
-                path = os.path.basename(file["path"])
-            else:
-                path = file["path"]
+            path = file["path"]
             dirname = os.path.dirname(path)
+            print("path", path)
 
             if dirname != "":
                 os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -173,7 +172,7 @@ def download_data(flatten=False, output_dir=CWD):
                     print_text("✘ Got interrupted", "red", in_place=False)
                     sys.exit()
             else:
-                download_data(file["html_url"], flatten, dir_out)
+                download_data(file["html_url"], dir_out)
 
     return total_files
 
@@ -187,29 +186,18 @@ def download():
     parser = argparse.ArgumentParser(
         description="Download directories/folders from GitHub"
     )
-    # parser.add_argument('urls', nargs="+",
-    #                     help="List of Github directories to download.")
-    parser.add_argument(
-        "--output_dir",
-        "-d",
-        dest="output_dir",
-        default=CWD,
-        help="All directories will be downloaded to the specified directory.",
-    )
 
     parser.add_argument(
-        "--flatten",
-        "-f",
+        "--country",
+        "-cty",
         action="store_true",
-        help="Flatten directory structures. Do not create extra directory and download found files to"
-        " output directory. (default to current directory if not specified)",
+        help="The country of data to which the matching will apply to. (Default is Australia if not specified)",
     )
 
     args = parser.parse_args()
+    country = args.country
 
-    flatten = args.flatten
-
-    download_data(flatten, args.output_dir)
+    download_data(country)
     print_text("✔ Download complete", "green", in_place=True)
 
 
