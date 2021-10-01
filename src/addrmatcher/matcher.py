@@ -375,6 +375,9 @@ class GeoMatcher:
 
                 # get the index with the largest similarity
                 largest_idx = self._index_data.nlargest(1, "RATIO")
+                
+                if largest_idx["RATIO"].values[0] < similarity_threshold*100:
+                    return {}
 
                 # first, check the filename it it's available
                 parquet_filename = largest_idx["FILE_NAME"].values[0]
@@ -437,16 +440,16 @@ class GeoMatcher:
                             by="RATIO", ascending=False
                         ).reset_index(drop=True)
 
-                        return addresses.head(1)[selected_columns]
+                        return addresses.head(1)[selected_columns].to_dict(orient='list')
 
                     # return all the similar addresses
                     else:
 
                         return addresses[selected_columns].sort_values(
                             by="RATIO", ascending=False
-                        )
+                        ).to_dict(orient='list')
                 else:
-                    return None
+                    return {}
 
             else:
                 raise ValueError("The address file can't be found: " + parquet_filename)
@@ -555,4 +558,4 @@ class GeoMatcher:
             distance_map
         )
 
-        return final_gnaf_df.sort_values("DISTANCE")
+        return final_gnaf_df.sort_values("DISTANCE").to_dict(orient='list')
