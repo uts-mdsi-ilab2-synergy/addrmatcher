@@ -2,6 +2,7 @@ from .region import Region
 from .hierarchy import GeoHierarchy
 from operator import lt, le, ge, gt
 from rapidfuzz import fuzz
+from rapidfuzz.string_metric import jaro_similarity, jaro_winkler_similarity
 import pandas as pd
 import re
 import os
@@ -10,7 +11,6 @@ from pyarrow import fs
 import pyarrow.parquet as pq
 from sklearn.neighbors import BallTree
 import numpy as np
-from ast import literal_eval
 
 
 class GeoMatcher:
@@ -336,6 +336,7 @@ class GeoMatcher:
         operator=None,
         region="",
         address_cleaning=False,
+        string_metric = "levenshtein"
     ):
         """
         perform address based matching and return the corresponding region
@@ -345,6 +346,13 @@ class GeoMatcher:
         :param boolean address_cleaning: perform data cleaning on the address, for instance: revise invalid suburb name
                                          (currently, only applied to Australian addresses)
         """
+        
+        if string_metric not in ['levenshtein','jaro','jaro_winkler']:
+            raise ValueError("String metric is unknown. Select one of 'levenshtein','jaro','jaro_winkler'")
+            
+        if similarity_threshold < 0:
+            raise ValueError("Similarity threshold has to be larger than 0")
+        
         # initiate the result
         addresses = pd.DataFrame()
 
@@ -366,12 +374,27 @@ class GeoMatcher:
             if clean_address_idx.shape[0] == 0:
                 # calculate the distance (Levenshtein Distance) between the input address (without street number) and the index
                 # [all special characters are removed]
-                self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
-                    lambda x: fuzz.ratio(
-                        re.sub(r"[\W_]+", "", clean_address),
-                        re.sub(r"[\W_]+", "", x.upper()),
+                if string_metric == 'levenshtein': 
+                    self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
+                        lambda x: fuzz.ratio(
+                            re.sub(r"[\W_]+", "", clean_address),
+                            re.sub(r"[\W_]+", "", x.upper()),
+                        )
                     )
-                )
+                elif string_metric == 'jaro': 
+                    self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
+                        lambda x: jaro_similarity(
+                            re.sub(r"[\W_]+", "", clean_address),
+                            re.sub(r"[\W_]+", "", x.upper()),
+                        )
+                    )
+                else:
+                    self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
+                        lambda x: jaro_winkler_similarity(
+                            re.sub(r"[\W_]+", "", clean_address),
+                            re.sub(r"[\W_]+", "", x.upper()),
+                        )
+                    )
 
                 # get the index with the largest similarity
                 largest_idx = self._index_data.nlargest(1, "RATIO")
@@ -397,12 +420,27 @@ class GeoMatcher:
 
                 # calculate the distance (Levenshtein Distance) between the input address (with street number) and the entire addresses reference dataset
                 # [all special characters are removed]
-                address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
-                    lambda x: fuzz.ratio(
-                        re.sub(r"[\W_]+", "", address.upper()),
-                        re.sub(r"[\W_]+", "", x.upper()),
+                if string_metric == 'levenshtein': 
+                    address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
+                        lambda x: fuzz.ratio(
+                            re.sub(r"[\W_]+", "", address.upper()),
+                            re.sub(r"[\W_]+", "", x.upper()),
+                        )
                     )
-                )
+                elif string_metric == 'jaro': 
+                    address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
+                        lambda x: jaro_similarity(
+                            re.sub(r"[\W_]+", "", address.upper()),
+                            re.sub(r"[\W_]+", "", x.upper()),
+                        )
+                    )
+                else:
+                    address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
+                        lambda x: jaro_winkler_similarity(
+                            re.sub(r"[\W_]+", "", address.upper()),
+                            re.sub(r"[\W_]+", "", x.upper()),
+                        )
+                    )
 
                 # if similarity score is larger then the threshold,
                 # there is a possibility the addresses are similar
