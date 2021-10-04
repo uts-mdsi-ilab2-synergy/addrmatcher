@@ -1,5 +1,6 @@
 from .region import Region
 from .hierarchy import GeoHierarchy
+from .AU import AUS
 from operator import lt, le, ge, gt
 from rapidfuzz import fuzz
 import pandas as pd
@@ -339,7 +340,7 @@ class GeoMatcher:
     ):
         """
         perform address based matching and return the corresponding region
-        e.g. administrative level or statistical are
+        e.g. administrative level or statistical area
 
         :param string address:
         :param boolean address_cleaning: perform data cleaning on the address, for instance: revise invalid suburb name
@@ -375,8 +376,8 @@ class GeoMatcher:
 
                 # get the index with the largest similarity
                 largest_idx = self._index_data.nlargest(1, "RATIO")
-                
-                if largest_idx["RATIO"].values[0] < similarity_threshold*100:
+
+                if largest_idx["RATIO"].values[0] < similarity_threshold * 100:
                     return {}
 
                 # first, check the filename it it's available
@@ -440,14 +441,18 @@ class GeoMatcher:
                             by="RATIO", ascending=False
                         ).reset_index(drop=True)
 
-                        return addresses.head(1)[selected_columns].to_dict(orient='list')
+                        return addresses.head(1)[selected_columns].to_dict(
+                            orient="list"
+                        )
 
                     # return all the similar addresses
                     else:
 
-                        return addresses[selected_columns].sort_values(
-                            by="RATIO", ascending=False
-                        ).to_dict(orient='list')
+                        return (
+                            addresses[selected_columns]
+                            .sort_values(by="RATIO", ascending=False)
+                            .to_dict(orient="list")
+                        )
                 else:
                     return {}
 
@@ -475,45 +480,41 @@ class GeoMatcher:
 
         return df
 
-    def _ensure_lat_lon_within_range(self, lat, lon):
-
-        # MAX and MIN coordinates of AU addresses
-        lat_min = -43.58301104
-        lat_max = -9.23000371
-        lon_min = 96.82159219
-        lon_max = 167.99384663
-
-        # Ensure Latitudge within the AU range
-        lat = max(lat, lat_min)
-        lat = min(lat, lat_max)
-
-        # Ensure longitutde within the AU range
-        lon = max(lon, lon_min)
-        lon = min(lon, lon_max)
-
-        return lat, lon
-
-    def _filter_for_rows_within_mid_distance(df, lat, lon, mid_distance):
-
-        mid_df = df[
-            df.LATITUDE.between(lat - mid_distance, lat + mid_distance)
-            & df.LONGITUDE.between(lon - mid_distance, lon + mid_distance)
-        ]
-
-        return mid_df
-
     def get_region_by_coordinates(
         self, lat, lon, n=1, km=1, regions=[], operator=None, region=""
     ):
+        """
+        perform coordinate_based matching and return the corresponding regions in a dictionary
+        e.g. administrative level or statistical area
+
+        :param float latitude:
+        :param float longitude:
+        :param integer n: the number of nearest addresses to be returned by the function.
+        :param integer km: the nearest addresses will be searched from the input coordinates point within the argument kilometer radius
+        """
 
         min_distance = 0
         # 1 lat equals 110.574km
         distance = (km if km else 1) / 110.574
 
-        ## 1. Initial distance setting according to lat/lon arguments to ensure lat/lon within AU range
-        lat, lon = self._ensure_lat_lon_within_range(lat, lon)
+        # 1. Ensure lat/lon within the country's geo boundary range
+        cor_btry = self._hierarchy.coordinate_boundary()
+        within_range = (cor_btry[0] <= lat <= cor_btry[1]) and (
+            cor_btry[2] <= lon <= cor_btry[3]
+        )
+        if not within_range:
+            raise ValueError(
+                "The latitude input should be within "
+                + cor_btry[0]
+                + "and"
+                + cor_btry[1]
+                + " and longitude input must be within  "
+                + cor_btry[2]
+                + "and"
+                + cor_btry[3]
+            )
 
-        ## 2. Make the first load of GNAF dataset
+        # 2. Make the first load of GNAF dataset
         gnaf_df = self._load_parquet(lat, lon, distance)
 
         # 2.a If the desired count of addresses not exist, increase the radius
@@ -529,19 +530,23 @@ class GeoMatcher:
         while gnaf_df.shape[0] >= n + 10000:
             middle_distance = (distance - min_distance) / 2
 
-            gnaf_df = gnaf_df[
+            temp_df = gnaf_df[
                 gnaf_df.LATITUDE.between(lat - middle_distance, lat + middle_distance)
                 & gnaf_df.LONGITUDE.between(
                     lon - middle_distance, lon + middle_distance
                 )
             ]
-
+            # If no record are found, quit the iteration
+            if temp_df.shape[0] < 1:
+                break
+            gnaf_df = temp_df
             distance = middle_distance
 
         ## 3. Build the Ball Tree and Query for the nearest within k distance
         ball_tree = BallTree(
             np.deg2rad(gnaf_df[["LATITUDE", "LONGITUDE"]].values), metric="haversine"
         )
+
         distances, indices = ball_tree.query(
             np.deg2rad(np.c_[lat, lon]), k=min(n, gnaf_df.shape[0])
         )
@@ -554,8 +559,8 @@ class GeoMatcher:
         bool_list = gnaf_df["ADDRESS_DETAIL_PID"].isin(pids)
         final_gnaf_df = gnaf_df[bool_list]
 
-        final_gnaf_df["DISTANCE"] = final_gnaf_df["ADDRESS_DETAIL_PID"].map(
+        final_gnaf_df.loc[:, "DISTANCE"] = final_gnaf_df["ADDRESS_DETAIL_PID"].map(
             distance_map
         )
 
-        return final_gnaf_df.sort_values("DISTANCE").to_dict(orient='list')
+        return final_gnaf_df.sort_values("DISTANCE").to_dict(orient="list")

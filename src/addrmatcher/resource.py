@@ -15,19 +15,16 @@ color_code = {
     "green": Style.BRIGHT + Fore.GREEN,
 }
 erase_line = "\x1b[2K"
-repo_url = (
-    "https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/tree/main/data/Australia/"
-)
 
 
 def print_text(
     text, color="default", in_place=False, **kwargs
 ):  # type: (str, str, bool, any) -> None
     """
-    print text to console, a wrapper to built-in print
-    :param text: text to print
-    :param color: can be one of "red" or "green", or "default"
-    :param in_place: whether to erase previous line and print in place
+    print text to console
+    :param text string: text to print
+    :param color string: can be one of "red" or "green", or "default"
+    :param in_place boolean: whether to erase previous line and print in place
     :param kwargs: other keywords passed to built-in print
     """
     if in_place:
@@ -37,15 +34,18 @@ def print_text(
 
 def create_url(url):
     """
-    From the given url, produce a URL that is compatible with Github's REST API. Can handle blob or tree paths.
+    produce a URL that is compatible with Github's REST API from the input url
+    This can handle blob or tree paths.
+
+    :param url string: Url to the data directory in Github repository
     """
     repo_only_url = re.compile(
         r"https:\/\/github\.com\/[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\/[a-zA-Z0-9]+$"
     )
     re_branch = re.compile("/(tree|blob)/(.+?)/")
 
-    # Check if the given url is a url to a GitHub repo. If it is, tell the
-    # user to use 'git clone' to download it
+    # Check if the given url is a url to a GitHub repo.
+    # If it is, inform the user to use 'git clone' to download it
     if re.match(repo_only_url, url):
         print_text(
             "✘ The given url is a complete repository. Use 'git clone' to download the repository",
@@ -54,7 +54,7 @@ def create_url(url):
         )
         sys.exit()
 
-    # extract the branch name from the given url (e.g master)
+    # Extract the branch name from the given url (e.g master)
     branch = re_branch.search(url)
     download_dirs = url[branch.end() :]
     api_url = (
@@ -67,23 +67,32 @@ def create_url(url):
     return api_url, download_dirs
 
 
-def download_data(flatten=False, output_dir=CWD):
-    """Downloads the files and directories in repo_url.
-    If flatten is specified, the contents of any and all
-    sub-directories will be pulled upwards into the root folder."""
+def download_data(country="Australia", output_dir=CWD):
+    """
+    Downloads the files and directories and sub-directories in repo_url.
+    param country string: country name which will be sub-directory name example - data/Australia/
+    """
+
+    # This is the temporary place to host of data files.
+    # Example - data/Australia/*.parquet
+    repo_url = (
+        "https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/tree/main/data/"
+        + country
+        + "/"
+    )
 
     # generate the url which returns the JSON data
     api_url, download_dirs = create_url(repo_url)
+
     # To handle file names.
-    if not flatten:
-        print("Not Flattern")
-        if len(download_dirs.split(".")) == 0:
-            dir_out = os.path.join(output_dir, download_dirs)
-        else:
-            print("length ", len(download_dirs.split(".")))
-            dir_out = os.path.join(output_dir, "/".join(download_dirs.split("/")[:-1]))
+    if len(download_dirs.split(".")) == 0:
+        dir_out = os.path.join(output_dir, download_dirs)
     else:
-        dir_out = output_dir
+        print("length ", len(download_dirs.split(".")))
+        dir_out = os.path.join(output_dir, "/".join(download_dirs.split("/")[:-1]))
+
+    # make a directory with the name which is taken from the actual repo
+    os.makedirs(dir_out, exist_ok=True)
 
     try:
         opener = request.build_opener()
@@ -96,15 +105,10 @@ def download_data(flatten=False, output_dir=CWD):
         print_text("✘ Got interrupted", "red", in_place=True)
         sys.exit()
 
-    if not flatten:
-        print("Not Flattern")
-        # make a directory with the name which is taken from
-        # the actual repo
-        os.makedirs(dir_out, exist_ok=True)
-
     # total files count
     total_files = 0
 
+    ## Writing into file
     with open(response[0], "r") as f:
         data = json.load(f)
         # getting the total number of files so that we
@@ -127,8 +131,8 @@ def download_data(flatten=False, output_dir=CWD):
                     "green",
                     in_place=True,
                 )
-
                 return total_files
+
             except KeyboardInterrupt:
                 # when CTRL+C is pressed during the execution of this script,
                 # bring the cursor to the beginning, erase the current line, and dont make a new line
@@ -139,11 +143,9 @@ def download_data(flatten=False, output_dir=CWD):
             file_url = file["download_url"]
             file_name = file["name"]
 
-            if flatten:
-                path = os.path.basename(file["path"])
-            else:
-                path = file["path"]
+            path = file["path"]
             dirname = os.path.dirname(path)
+            print("path", path)
 
             if dirname != "":
                 os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -173,12 +175,15 @@ def download_data(flatten=False, output_dir=CWD):
                     print_text("✘ Got interrupted", "red", in_place=False)
                     sys.exit()
             else:
-                download_data(file["html_url"], flatten, dir_out)
+                download_data(file["html_url"], dir_out)
 
     return total_files
 
 
 def download():
+    """
+    Trigger the download_data function and read the argument from user's CLI
+    """
 
     if sys.platform != "win32":
         # disbale CTRL+Z
@@ -187,29 +192,18 @@ def download():
     parser = argparse.ArgumentParser(
         description="Download directories/folders from GitHub"
     )
-    # parser.add_argument('urls', nargs="+",
-    #                     help="List of Github directories to download.")
-    parser.add_argument(
-        "--output_dir",
-        "-d",
-        dest="output_dir",
-        default=CWD,
-        help="All directories will be downloaded to the specified directory.",
-    )
 
     parser.add_argument(
-        "--flatten",
-        "-f",
+        "--country",
+        "-cty",
         action="store_true",
-        help="Flatten directory structures. Do not create extra directory and download found files to"
-        " output directory. (default to current directory if not specified)",
+        help="The country of data to which the matching will apply to. (Default is Australia if not specified)",
     )
 
     args = parser.parse_args()
+    country = args.country
 
-    flatten = args.flatten
-
-    download_data(flatten, args.output_dir)
+    download_data(country)
     print_text("✔ Download complete", "green", in_place=True)
 
 
