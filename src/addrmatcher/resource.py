@@ -15,19 +15,16 @@ color_code = {
     "green": Style.BRIGHT + Fore.GREEN,
 }
 erase_line = "\x1b[2K"
-repo_url = (
-    "https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/tree/main/data/Australia/"
-)
 
 
 def print_text(
     text, color="default", in_place=False, **kwargs
 ):  # type: (str, str, bool, any) -> None
     """
-    print text to console, a wrapper to built-in print
-    :param text: text to print
-    :param color: can be one of "red" or "green", or "default"
-    :param in_place: whether to erase previous line and print in place
+    print text to console
+    :param text string: text to print
+    :param color string: can be one of "red" or "green", or "default"
+    :param in_place boolean: whether to erase previous line and print in place
     :param kwargs: other keywords passed to built-in print
     """
     if in_place:
@@ -37,15 +34,18 @@ def print_text(
 
 def create_url(url):
     """
-    From the given url, produce a URL that is compatible with Github's REST API. Can handle blob or tree paths.
+    produce a URL that is compatible with Github's REST API from the input url
+    This can handle blob or tree paths.
+
+    :param url string: Url to the data directory in Github repository
     """
     repo_only_url = re.compile(
         r"https:\/\/github\.com\/[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\/[a-zA-Z0-9]+$"
     )
     re_branch = re.compile("/(tree|blob)/(.+?)/")
 
-    # Check if the given url is a url to a GitHub repo. If it is, tell the
-    # user to use 'git clone' to download it
+    # Check if the given url is a url to a GitHub repo.
+    # If it is, inform the user to use 'git clone' to download it
     if re.match(repo_only_url, url):
         print_text(
             "✘ The given url is a complete repository. Use 'git clone' to download the repository",
@@ -54,7 +54,7 @@ def create_url(url):
         )
         sys.exit()
 
-    # extract the branch name from the given url (e.g master)
+    # Extract the branch name from the given url (e.g master)
     branch = re_branch.search(url)
     download_dirs = url[branch.end() :]
     api_url = (
@@ -68,10 +68,13 @@ def create_url(url):
 
 
 def download_data(country="Australia", output_dir=CWD):
-    """Downloads the files and directories in repo_url.
-    If flatten is specified, the contents of any and all
-    sub-directories will be pulled upwards into the root folder."""
+    """
+    Downloads the files and directories and sub-directories in repo_url.
+    param country string: country name which will be sub-directory name example - data/Australia/
+    """
 
+    # This is the temporary place to host of data files.
+    # Example - data/Australia/*.parquet
     repo_url = (
         "https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/tree/main/data/"
         + country
@@ -105,7 +108,7 @@ def download_data(country="Australia", output_dir=CWD):
     # total files count
     total_files = 0
 
-    ## Writing inot file
+    ## Writing into file
     with open(response[0], "r") as f:
         data = json.load(f)
         # getting the total number of files so that we
@@ -178,6 +181,9 @@ def download_data(country="Australia", output_dir=CWD):
 
 
 def download():
+    """
+    Trigger the download_data function and read the argument from user's CLI
+    """
 
     if sys.platform != "win32":
         # disbale CTRL+Z
