@@ -335,7 +335,7 @@ class GeoMatcher:
         operator=None,
         region="",
         address_cleaning=False,
-        string_metric = "levenshtein"
+        string_metric="levenshtein",
     ):
         """
         perform address based matching and return the corresponding region
@@ -345,13 +345,15 @@ class GeoMatcher:
         :param boolean address_cleaning: perform data cleaning on the address, for instance: revise invalid suburb name
                                          (currently, only applied to Australian addresses)
         """
-        
-        if string_metric not in ['levenshtein','jaro','jaro_winkler']:
-            raise ValueError("String metric is unknown. Select one of 'levenshtein','jaro','jaro_winkler'")
-            
+
+        if string_metric not in ["levenshtein", "jaro", "jaro_winkler"]:
+            raise ValueError(
+                "String metric is unknown. Select one of 'levenshtein','jaro','jaro_winkler'"
+            )
+
         if similarity_threshold < 0:
             raise ValueError("Similarity threshold has to be larger than 0")
-        
+
         # initiate the result
         addresses = pd.DataFrame()
 
@@ -373,14 +375,14 @@ class GeoMatcher:
             if clean_address_idx.shape[0] == 0:
                 # calculate the distance (Levenshtein Distance) between the input address (without street number) and the index
                 # [all special characters are removed]
-                if string_metric == 'levenshtein': 
+                if string_metric == "levenshtein":
                     self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
                         lambda x: fuzz.ratio(
                             re.sub(r"[\W_]+", "", clean_address),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
                     )
-                elif string_metric == 'jaro': 
+                elif string_metric == "jaro":
                     self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
                         lambda x: jaro_similarity(
                             re.sub(r"[\W_]+", "", clean_address),
@@ -419,14 +421,14 @@ class GeoMatcher:
 
                 # calculate the distance (Levenshtein Distance) between the input address (with street number) and the entire addresses reference dataset
                 # [all special characters are removed]
-                if string_metric == 'levenshtein': 
+                if string_metric == "levenshtein":
                     address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
                         lambda x: fuzz.ratio(
                             re.sub(r"[\W_]+", "", address.upper()),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
                     )
-                elif string_metric == 'jaro': 
+                elif string_metric == "jaro":
                     address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
                         lambda x: jaro_similarity(
                             re.sub(r"[\W_]+", "", address.upper()),
@@ -534,20 +536,28 @@ class GeoMatcher:
         distance = (km if km else 1) / 110.574
 
         # 1. Ensure lat/lon within the country's geo boundary range
-        cor_btry = self._hierarchy.coordinate_boundary()
-        within_range = (cor_btry[0] <= lat <= cor_btry[1]) and (
-            cor_btry[2] <= lon <= cor_btry[3]
+        if len(self._hierarchy.coordinate_boundary) != 4:
+            raise ValueError("The country's geo boundary is not available")
+
+        within_range = (
+            self._hierarchy.coordinate_boundary[0]
+            <= lat
+            <= self._hierarchy.coordinate_boundary[1]
+        ) and (
+            self._hierarchy.coordinate_boundary[2]
+            <= lon
+            <= self._hierarchy.coordinate_boundary[3]
         )
         if not within_range:
             raise ValueError(
                 "The latitude input should be within "
-                + cor_btry[0]
+                + self._hierarchy.coordinate_boundary[0]
                 + "and"
-                + cor_btry[1]
+                + self._hierarchy.coordinate_boundary[1]
                 + " and longitude input must be within  "
-                + cor_btry[2]
+                + self._hierarchy.coordinate_boundary[2]
                 + "and"
-                + cor_btry[3]
+                + self._hierarchy.coordinate_boundary[3]
             )
 
         # 2. Make the first load of GNAF dataset
