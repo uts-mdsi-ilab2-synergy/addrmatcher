@@ -1,7 +1,3 @@
-from .region import Region
-from .hierarchy import GeoHierarchy
-from .AU import AUS
-from operator import lt, le, ge, gt
 from rapidfuzz import fuzz
 from rapidfuzz.string_metric import jaro_similarity, jaro_winkler_similarity
 import pandas as pd
@@ -46,7 +42,7 @@ class GeoMatcher:
                 )
 
         # get all the parquet filenames within the folder
-        self._filename = glob.glob(os.path.join(self._file_location, "*".format("parquet")))
+        self._filename = glob.glob(os.path.join(self._file_location, "*.parquet"))
 
         # init
         index_file = "index.parquet"
@@ -139,7 +135,7 @@ class GeoMatcher:
         # initiate the result
         no_number_address = address
         while True:
-            match = re.search("[0-9]+[a-zA-Z,]*\s", address)
+            match = re.search(r"[0-9]+[a-zA-Z,]*\s", address)
             if not match:
                 break
 
@@ -173,16 +169,16 @@ class GeoMatcher:
         # initiate the dataframe
         matched_df = pd.DataFrame()
 
-        ## Search State and Postcode and extract - example QLD 410
+        # search State and Postcode and extract - example QLD 410
         match = re.search(
-            "\s((?:NSW|VIC|QLD|TAS|WA|SA|NT|ACT))\s([0-9]{4})$", no_number_address
+            r"\s((?:NSW|VIC|QLD|TAS|WA|SA|NT|ACT))\s([0-9]{4})$", no_number_address
         )
         if not match:
             return matched_df
 
         state, postcode = match.group(1), match.group(2)
 
-        ## Firstly, Filter for the rows from the Index File based on same Postcode and State
+        # firstly, Filter for the rows from the Index File based on same Postcode and State
         matched_postcode_state = self._index_data[
             (self._index_data["POSTCODE"] == postcode)
             & (self._index_data["STATE"] == state)
@@ -190,29 +186,32 @@ class GeoMatcher:
         if matched_postcode_state.empty:
             return matched_df
 
-        ## Secondly, Filter further for same Suburbs, get the Distinct Suburb Name List first - "LOCALITY_NAME"
+        # secondly, Filter further for same Suburbs,
+        # get the Distinct Suburb Name List first - "LOCALITY_NAME"
 
         suburb_list = matched_postcode_state["LOCALITY_NAME"].unique()
         suburbs = [sub for sub in suburb_list if sub in no_number_address]
         if not suburbs:
             return matched_df
 
-        # Get the boolean array - of rows matching (LOCALITY_NAME) with filtered suburbs in the above list
+        # get the boolean array - of rows matching (LOCALITY_NAME)
+        # with filtered suburbs in the above list
         index = matched_postcode_state["LOCALITY_NAME"].str.contains("|".join(suburbs))
         if not any(index):
             return matched_df
 
-        # Find Street and Street code from no_number_address to further matching by street name
+        # find Street and Street code from no_number_address to further matching by street name
         # sample match output - <re.Match object; span=(29, 46), match='WEST END QLD 4101'>
         match = re.search(
             f"(?:{'|'.join(suburbs)})\s+{state}\s+{postcode}", no_number_address
         )
         if not match:
             return matched_df
-        # Extract (unit, street) from the whole address string - UNIT 415 21 ABC STREET  from "UNIT 415 21 ABC STREET WEST END QLD 4101"
+        # extract (unit, street) from the whole address string
+        # - UNIT 415 21 ABC STREET  from "UNIT 415 21 ABC STREET WEST END QLD 4101"
         street_string = no_number_address[: match.span()[0]]
 
-        ## Thirdly, Filter further by Street Name within the filtered Suburb
+        # thirdly, Filter further by Street Name within the filtered Suburb
         subb_df = matched_postcode_state[index]
         unique_street_name_list = subb_df["STREET_NAME"].unique()
         street_name = [
@@ -341,9 +340,14 @@ class GeoMatcher:
         perform address based matching and return the corresponding region
         e.g. administrative level or statistical area
 
-        :param string address:
-        :param boolean address_cleaning: perform data cleaning on the address, for instance: revise invalid suburb name
-                                         (currently, only applied to Australian addresses)
+        Parameters
+        ----------
+        address:string
+        address_cleaning:boolean
+            perform data cleaning on the address, for instance: revise invalid suburb name
+            (currently, only applied to Australian addresses)
+        Returns
+        ----------
         """
 
         if string_metric not in ["levenshtein", "jaro", "jaro_winkler"]:
@@ -373,7 +377,8 @@ class GeoMatcher:
             ]
 
             if clean_address_idx.shape[0] == 0:
-                # calculate the distance (Levenshtein Distance) between the input address (without street number) and the index
+                # calculate the distance (Levenshtein Distance) between the
+                # input address (without street number) and the index
                 # [all special characters are removed]
                 if string_metric == "levenshtein":
                     self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
@@ -419,7 +424,9 @@ class GeoMatcher:
                     filters=[("IDX", "=", parquet_idx)],
                 ).to_pandas()
 
-                # calculate the distance (Levenshtein Distance) between the input address (with street number) and the entire addresses reference dataset
+                # calculate the distance (Levenshtein Distance) between the
+                # input address (with street number) and the entire addresses
+                # reference dataset
                 # [all special characters are removed]
                 if string_metric == "levenshtein":
                     address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
@@ -525,10 +532,17 @@ class GeoMatcher:
         perform coordinate_based matching and return the corresponding regions in a dictionary
         e.g. administrative level or statistical area
 
-        :param float latitude:
-        :param float longitude:
-        :param integer n: the number of nearest addresses to be returned by the function.
-        :param integer km: the nearest addresses will be searched from the input coordinates point within the argument kilometer radius
+        Parameters
+        ----------
+        latitude:float
+        longitude:float
+        n:integer
+            the number of nearest addresses to be returned by the function.
+        km:integer
+            the nearest addresses will be searched from the input coordinates
+            point within the argument kilometer radius
+        Returns
+        ----------
         """
 
         min_distance = 0
@@ -570,7 +584,8 @@ class GeoMatcher:
 
             gnaf_df = self._load_parquet(lat, lon, distance)
 
-        # 2.b Keep reducing the size of rows if more than 10k adddresses are found within the radius
+        # 2.b Keep reducing the size of rows if more than 10k adddresses
+        # are found within the radius
         # Take the median distance to reduce
         # This is to limit the number of datapoint to build the Ball tree in the next step
         while gnaf_df.shape[0] >= n + 10000:
@@ -588,7 +603,7 @@ class GeoMatcher:
             gnaf_df = temp_df
             distance = middle_distance
 
-        ## 3. Build the Ball Tree and Query for the nearest within k distance
+        # 3. Build the Ball Tree and Query for the nearest within k distance
         ball_tree = BallTree(
             np.deg2rad(gnaf_df[["LATITUDE", "LONGITUDE"]].values), metric="haversine"
         )
@@ -601,7 +616,7 @@ class GeoMatcher:
         pids = gnaf_df.ADDRESS_DETAIL_PID.iloc[indices].tolist()
         distance_map = dict(zip(pids, [distance * 6371 for distance in distances[0]]))
 
-        ## 4. Filter the GNAF dataset by address_detail_pid
+        # 4. Filter the GNAF dataset by address_detail_pid
         bool_list = gnaf_df["ADDRESS_DETAIL_PID"].isin(pids)
         final_gnaf_df = gnaf_df[bool_list]
 
