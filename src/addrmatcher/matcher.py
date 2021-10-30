@@ -171,7 +171,7 @@ class GeoMatcher:
 
         Parameter
         ---------
-        string no_number_address:str
+        no_number_address: string
 
         Returns
         -------
@@ -256,8 +256,8 @@ class GeoMatcher:
 
         Parameter
         --------
-        no_number_address: str
-                            address without street number
+        no_number_address: string
+                           address without street number
         Return
         ------
         a matched address
