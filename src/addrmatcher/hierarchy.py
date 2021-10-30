@@ -48,7 +48,8 @@ class GeoHierarchy:
                         )
             else:
                 raise ValueError(
-                    "The boundary must be a four element list [lat_min, lat_max, long_min, long_max]"
+                    "The boundary must be a four element list "
+                    "[lat_min, lat_max, long_min, long_max]"
                 )
 
     def add_type(self, region, type_id, type_name=""):
@@ -112,15 +113,25 @@ class GeoHierarchy:
         """
         get all the relevant regions from the hierarchy based on the given parameters
 
-        :param Operator operator: use the operator to find all the upper/lower level regions
-                                  from a particular region name.
-                                  For instance: Country > State (Country gt State).
-                                                Use the 'gt' operator to search for the upper level of State
-        :param string name: fill the name or short name of the regions in relations to operator parameter above
-        :param list names: the list of region's name to look for
-        :param string attribute: the region's attribute name that will be saved into the list (name, short_name, or col_name)
-                                 if it's empty, then the list will store the object of the region
-        :return list: list of regions or region's attribute
+        Parameters
+        ----------
+        operator: Operator
+            use the operator to find all the upper/lower level regions
+            from a particular region name.
+            For instance: Country > State (Country gt State).
+                          Use the 'gt' operator to search for the upper level of State
+        name:string
+            fill the name or short name of the regions in relations to operator parameter above
+        names:list
+            the list of region's name to look for
+        attribute:string
+            the region's attribute name that will be saved into the list
+            (name, short_name, or col_name)
+            if it's empty, then the list will store the object of the region
+        Returns
+        -------
+        list
+            list of regions or region's attribute
         """
 
         # validate the arguments
