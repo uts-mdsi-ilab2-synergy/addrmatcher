@@ -205,7 +205,7 @@ def download():
     parser.add_argument(
         "--country",
         "-cty",
-        action="store_true",
+        default="Australia",
         help="The country of data to which the matching "
         "will apply to. (Default is Australia if not specified)",
     )
