@@ -25,13 +25,14 @@ def print_text(
     Print text to console
     Parameters
     ----------
-    text    : str
-    color   : str
-              it can be one of "red" or "green", or "default"
+    text : string
+           text to print
+    color : string
+            it can be one of "red" or "green", or "default"
     in_place : boolean
                whether to erase previous line and print in place
-    **kwargs  : dict, optional
-              : other keywords passed to built-in print
+    **kwargs : dict, optional
+             : other keywords passed to built-in print
     Returns
     -------
     None
@@ -47,13 +48,13 @@ def create_url(url):
     This can handle blob or tree paths.
     Parameters
     ----------
-    url : str
-          Url to the data directory in Github repository
+    url : string
+          url to the data directory in Github repository
     Returns
     -------
-    apiurl      : str
+    apiurl      : string
                   Github API url
-    downloadurl : str
+    downloadurl : string
                   Download directory
 
     """
@@ -89,20 +90,16 @@ def create_url(url):
 
 def download_data(country="Australia", output_dir=CWD):
     """
-        Downloads the files and directories and sub-directories in repo_url.
-    <<<<<<< HEAD
-        Parameters
-        ----------
-        country : str
-                  country name which will be sub-directory name example - data/Australia/
-        Return
-        ------
-        total_file  : int
-                      number of total files downloaded
-    =======
-        param country string: country name which will be
-        sub-directory name example - data/Australia/
-    >>>>>>> f38a98593351d465042d1a199a28e2c23a829b3e
+    download the files and directories and sub-directories in repo_url.
+
+    Parameters
+    ----------
+    country : str
+              country name which will be sub-directory name example - data/Australia/
+    Return
+    ------
+    total_file  : int
+                  number of total files downloaded
     """
 
     # This is the temporary place to host of data files.

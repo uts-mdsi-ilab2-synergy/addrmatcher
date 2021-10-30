@@ -569,8 +569,10 @@ class GeoMatcher:
 
         Parameters
         ----------
-        latitude:float
-        longitude:float
+        lat:float
+            latitude
+        lon:float
+            longitude
         n:integer
             the number of nearest addresses to be returned by the function.
         km:integer
