@@ -48,7 +48,8 @@ def create_url(url):
     # If it is, inform the user to use 'git clone' to download it
     if re.match(repo_only_url, url):
         print_text(
-            "✘ The given url is a complete repository. Use 'git clone' to download the repository",
+            "✘ The given url is a complete repository. "
+            "Use 'git clone' to download the repository",
             "red",
             in_place=True,
         )
@@ -56,7 +57,7 @@ def create_url(url):
 
     # Extract the branch name from the given url (e.g master)
     branch = re_branch.search(url)
-    download_dirs = url[branch.end() :]
+    download_dirs = url[branch.end():]
     api_url = (
         url[: branch.start()].replace("github.com", "api.github.com/repos", 1)
         + "/contents/"
@@ -70,7 +71,8 @@ def create_url(url):
 def download_data(country="Australia", output_dir=CWD):
     """
     Downloads the files and directories and sub-directories in repo_url.
-    param country string: country name which will be sub-directory name example - data/Australia/
+    param country string: country name which will be
+    sub-directory name example - data/Australia/
     """
 
     # This is the temporary place to host of data files.
@@ -89,7 +91,8 @@ def download_data(country="Australia", output_dir=CWD):
         dir_out = os.path.join(output_dir, download_dirs)
     else:
         print("length ", len(download_dirs.split(".")))
-        dir_out = os.path.join(output_dir, "/".join(download_dirs.split("/")[:-1]))
+        dir_out = os.path.join(output_dir,
+                               "/".join(download_dirs.split("/")[:-1]))
 
     # make a directory with the name which is taken from the actual repo
     os.makedirs(dir_out, exist_ok=True)
@@ -101,14 +104,15 @@ def download_data(country="Australia", output_dir=CWD):
         response = request.urlretrieve(api_url)
     except KeyboardInterrupt:
         # when CTRL+C is pressed during the execution of this script,
-        # bring the cursor to the beginning, erase the current line, and dont make a new line
+        # bring the cursor to the beginning,
+        # erase the current line, and dont make a new line
         print_text("✘ Got interrupted", "red", in_place=True)
         sys.exit()
 
     # total files count
     total_files = 0
 
-    ## Writing into file
+    # Writing into file
     with open(response[0], "r") as f:
         data = json.load(f)
         # getting the total number of files so that we
@@ -125,9 +129,10 @@ def download_data(country="Australia", output_dir=CWD):
                 request.urlretrieve(
                     data["download_url"], os.path.join(dir_out, data["name"])
                 )
-                # bring the cursor to the beginning, erase the current line, and dont make a new line
+                # bring the cursor to the beginning,
+                # erase the current line, and dont make a new line
                 print_text(
-                    "Downloaded====: " + Fore.WHITE + "{}".format(data["name"]),
+                    "Downloaded====:" + Fore.WHITE + "{}".format(data["name"]),
                     "green",
                     in_place=True,
                 )
@@ -135,7 +140,8 @@ def download_data(country="Australia", output_dir=CWD):
 
             except KeyboardInterrupt:
                 # when CTRL+C is pressed during the execution of this script,
-                # bring the cursor to the beginning, erase the current line, and dont make a new line
+                # bring the cursor to the beginning,
+                # erase the current line, and dont make a new line
                 print_text("✘ Got interrupted", "red", in_place=False)
                 sys.exit()
 
@@ -160,7 +166,8 @@ def download_data(country="Australia", output_dir=CWD):
                     # download the file
                     request.urlretrieve(file_url, path)
 
-                    # bring the cursor to the beginning, erase the current line, and dont make a new line
+                    # bring the cursor to the beginning,
+                    # erase the current line, and dont make a new line
                     print_text(
                         "Downloaded" + Fore.WHITE + "{}".format(file_name),
                         "green",
@@ -170,8 +177,10 @@ def download_data(country="Australia", output_dir=CWD):
                     )
 
                 except KeyboardInterrupt:
-                    # when CTRL+C is pressed during the execution of this script,
-                    # bring the cursor to the beginning, erase the current line, and dont make a new line
+                    # when CTRL+C is pressed during
+                    # the execution of this script,
+                    # bring the cursor to the beginning,
+                    # erase the current line, and dont make a new line
                     print_text("✘ Got interrupted", "red", in_place=False)
                     sys.exit()
             else:
@@ -197,7 +206,8 @@ def download():
         "--country",
         "-cty",
         action="store_true",
-        help="The country of data to which the matching will apply to. (Default is Australia if not specified)",
+        help="The country of data to which the matching "
+        "will apply to. (Default is Australia if not specified)",
     )
 
     args = parser.parse_args()
