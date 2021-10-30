@@ -24,7 +24,7 @@ Data Download
 
  In the command line interface,
 
-`addressmatcher_data_download`
+`addrmatcher_data_download`
 
 The above console script will download the dataset which is currently hosted in Github into the user's directory. By default, the country is __Australia__ and Australia physical addresses will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
 
