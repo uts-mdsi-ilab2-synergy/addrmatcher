@@ -1,3 +1,5 @@
+Introduction
+------------
 Addrmatcher is an open-source Python software for matching input string addresses to the most similar street addresses and the geo coordinates inputs to the nearest street addresses. The result provides not only the matched addresses, but also the respective country’s different levels of regions for instance - in Australia, government administrative regions, statistical areas and suburb in which the address belongs to. 
 
 The Addrmatcher library is built to work with rapidfuzz, scikit-learn, pandas, numpy and provides user-friendly output. It supports python version 3.6 and above. It runs on all popular operating systems, and quick to install and is free of charge. 
@@ -5,8 +7,8 @@ The Addrmatcher library is built to work with rapidfuzz, scikit-learn, pandas, n
 In this initial release, the scope of input data and matching capability are limited to Australian addresses only. The Addrmatcher library will see the opportunity to scale the matching beyond Australia in future. 
 
 The package offers two matching capabilities -
-* address-based matching acceptes string addresses argument.
-* coordinate-based matching takes geo coordinates (latitude and longititude) input.
+* __address-based matching__ accepts string address as argument.
+* __coordinate-based matching__ takes geo coordinate (latitude and longititude) as input.
 
 The development team achieved the optimal speed of matching less than one second for each address and each pair of coordinate input. 
 
@@ -14,20 +16,26 @@ The reference dataset is built upon GNAF(Geocoded National Address File) and ASG
 
 Installation
 ------------
-
 `pip install addressmatcher`
 
 Data Download
 -------------
- Once the package has been install, the reference dataset needs to be downloaded prior to implementation of the package's matching functions. 
+ Once the package has been installed, the reference dataset needs to be downloaded into __the local current project working directory__ prior to implementation of the package's matching functions. 
 
- In the command line interface, in the project working directory, 
+ In the command line interface,
 
 `addressmatcher_data_download`
 
-By default, the country is __Australia__ and Australia physical addresses will be downloaded. After execution the command, the 37 parquet files will be stored in directories for example /data/AU/*.parquet
+The above console script will download the dataset which is currently hosted in Github into the user's directory. By default, the country is __Australia__ and Australia physical addresses will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
 
-Import the package
+When the package is expanded the matching to other countries in future, the script accepts the argument __country__. The dataset of the respective country will be downloaded according to the country argument.
+For example: 
+
+`addressmatcher_data_download --country=Australia` (or)
+
+`addressmatcher_data_download -cty=Australia` 
+       
+Import the package and classes
 ------------------
 ```python
 # Import the installed package
@@ -38,8 +46,7 @@ matcher = GeoMatcher(AUS)
 ```
 
 Example - Address-based Matching
---------------------------
-
+--------------------------------
 ```python
 matched_address = matcher.get_region_by_address("9, George Street, North Strathfield, NSW 2137")
 print(matched_address)
@@ -61,7 +68,8 @@ Example - Coordinate-based Matching
 ```python
 nearest_address = matcher.get_region_by_coordinates(-29.1789874, 152.628291)
 print(nearest_address)
-> {'IDX': [129736],
+
+>{'IDX': [129736],
  'FULL_ADDRESS': ['3 7679 CLARENCE WAY MALABUGILMAH NSW 2460'],
  'LATITUDE': [-29.17898685],
  'LONGITUDE': [152.62829132],
