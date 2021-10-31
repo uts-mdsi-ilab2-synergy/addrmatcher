@@ -87,6 +87,7 @@ class GeoMatcher:
                     + file
                 )
 
+        # define the dictionary for street code normalization
         self._street_code_dict = {
             "ALLY": "ALLEY",
             "ALY": "ALLEY",
@@ -127,15 +128,15 @@ class GeoMatcher:
 
     def _remove_street_number(self, address):
         """
-        remove the street number, lot/unit/level number from the address
-
+        Remove the street number, lot/unit/level number, or similar attributes
+        from the address
         Parameter
         ---------
-        address : string
-
+        address: string
+            The physical address' text
         Return
         ------
-        an address without the street number
+            An address without the street number
         """
 
         # initiate the result
@@ -167,15 +168,17 @@ class GeoMatcher:
 
     def _cleaning_match_with_index(self, no_number_address):
         """
-        extract suburb, post code and state from the address
-
+        Return similar addresses of the no_number_address with
+        the index file based on postcode and state or
+        locality/suburb or street name.
         Parameter
         ---------
         no_number_address: string
-
+            The physical address without the street number,
+            lot/unit/level number, or similar attribute
         Returns
         -------
-        a matched address
+            A matched address
         """
 
         # initiate the dataframe
@@ -252,15 +255,17 @@ class GeoMatcher:
 
     def _cleaning_address(self, no_number_address):
         """
-        Clean the address and find the matching address
-
+        Return the clean address.
+        The function will revise the locality/suburb or other attributes
+        if necessary.
         Parameter
-        --------
+        ---------
         no_number_address: string
-                           address without street number
+            The physical address without the street number,
+            lot/unit/level number, or similar attribute
         Return
         ------
-        a matched address
+            A clean address
         """
 
         matched_df = self._cleaning_match_with_index(no_number_address)
@@ -347,7 +352,7 @@ class GeoMatcher:
         self,
         address,
         similarity_threshold=0.9,
-        top_result=True,
+        nlargest=1,
         regions=[],
         operator=None,
         region="",
@@ -361,11 +366,48 @@ class GeoMatcher:
         Parameters
         ----------
         address:string
+            The complete physical address
+        similarity_threshold:float
+            The minimum similarity ratio ranges between 0 and 1 (default = 0.9)
+        nlargest:int
+            The number of the addresses to be returned by the function.
+            If nlargest = 1, then the function will return the top similarity only
+            (default = 1)
+        regions:list
+            Specify the name of the regions to be returned by the function
+        operator:list
+            use the operator to find all the upper/lower level regions
+            from a particular region name.
+            For instance: Country >= State (Country ge State).
+                          Use the 'ge' operator to search for the upper level of State
+                          (and itself)
+        region:string
+            fill the name or short name of the regions in relations to operator parameter above
         address_cleaning:boolean
             perform data cleaning on the address, for instance: revise invalid suburb name
             (currently, only applied to Australian addresses)
+        string_metric:string
+            The name of the edit distance algorithm used.
+            Select one of 'levenshtein','jaro', or 'jaro_winkler'
         Returns
-        ----------
+        -------
+            the dictionary of the matched adddresses
+        Examples
+        --------
+        >>> matcher = GeoMatcher(AUS)
+        >>> matched = matcher.get_region_by_address("25 Darnley Street,
+                      Braybrookt, VIC 3019", similarity_threshold = 0.95)
+        >>> matched
+        {'MB_CODE_2016': ['20375120000'],
+         'SA4_NAME_2016': ['Melbourne - West'],
+         'SA3_NAME_2016': ['Maribyrnong'],
+         'SA2_NAME_2016': ['Braybrook']
+         'SA1_7DIGITCODE_2016': ['2134703'],
+         'STATE': ['VIC'],
+         'RATIO': [0.9841269841269842],
+         'SSC_NAME_2016': ['Braybrook'],
+         'LGA_NAME_2016': ['Maribyrnong (C)'],
+         'FULL_ADDRESS': ['25 DARNLEY STREET BRAYBROOK VIC 3019']}
         """
 
         if string_metric not in ["levenshtein", "jaro", "jaro_winkler"]:
@@ -375,6 +417,9 @@ class GeoMatcher:
 
         if similarity_threshold < 0:
             raise ValueError("Similarity threshold has to be larger than 0")
+
+        if nlargest < 1:
+            raise ValueError("The number of returned records must be at least 1")
 
         # initiate the result
         addresses = pd.DataFrame()
@@ -404,6 +449,7 @@ class GeoMatcher:
                             re.sub(r"[\W_]+", "", clean_address),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
+                        / 100.0
                     )
                 elif string_metric == "jaro":
                     self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
@@ -411,6 +457,7 @@ class GeoMatcher:
                             re.sub(r"[\W_]+", "", clean_address),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
+                        / 100.0
                     )
                 else:
                     self._index_data["RATIO"] = self._index_data["ADDRESS"].apply(
@@ -418,12 +465,13 @@ class GeoMatcher:
                             re.sub(r"[\W_]+", "", clean_address),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
+                        / 100.0
                     )
 
                 # get the index with the largest similarity
                 largest_idx = self._index_data.nlargest(1, "RATIO")
 
-                if largest_idx["RATIO"].values[0] < similarity_threshold * 100:
+                if largest_idx["RATIO"].values[0] < similarity_threshold:
                     return {}
 
                 # first, check the filename it it's available
@@ -452,6 +500,7 @@ class GeoMatcher:
                             re.sub(r"[\W_]+", "", address.upper()),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
+                        / 100.0
                     )
                 elif string_metric == "jaro":
                     address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
@@ -459,6 +508,7 @@ class GeoMatcher:
                             re.sub(r"[\W_]+", "", address.upper()),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
+                        / 100.0
                     )
                 else:
                     address_parquet["RATIO"] = address_parquet["FULL_ADDRESS"].apply(
@@ -466,13 +516,14 @@ class GeoMatcher:
                             re.sub(r"[\W_]+", "", address.upper()),
                             re.sub(r"[\W_]+", "", x.upper()),
                         )
+                        / 100.0
                     )
 
                 # if similarity score is larger then the threshold,
                 # there is a possibility the addresses are similar
                 # will need to select the highest score later on
                 addresses = address_parquet[
-                    address_parquet["RATIO"] >= similarity_threshold * 100.0
+                    address_parquet["RATIO"] >= similarity_threshold
                 ]
 
                 # get the regions that users selected
@@ -497,7 +548,7 @@ class GeoMatcher:
                 # if there are possible similar address found
                 if addresses.shape[0] > 0:
                     # return the most similar address only
-                    if top_result:
+                    if nlargest == 1:
 
                         # sort the addresses based on the similarity score
                         addresses = addresses.sort_values(
@@ -513,6 +564,7 @@ class GeoMatcher:
 
                         return (
                             addresses[selected_columns]
+                            .nlargest(nlargest, "RATIO")
                             .sort_values(by="RATIO", ascending=False)
                             .to_dict(orient="list")
                         )
@@ -580,7 +632,23 @@ class GeoMatcher:
             point within the argument kilometer radius
         Returns
         -------
-        a dictionary of addresses with statistical and administrative regions
+            a dictionary of addresses with statistical and administrative regions
+        Examples
+        --------
+        >>> matcher = GeoMatcher(AUS)
+        >>> matched = matcher.get_region_by_address(-26.657299,153.094955)
+        >>> matched
+        {'FULL_ADDRESS': ['8 32 SECOND AVENUE MAROOCHYDORE QLD 4558'],
+         'LATITUDE': [-26.6572865955204],
+         'LONGITUDE': [153.09496396875],
+         'LGA_NAME_2016': ['Sunshine Coast (R)'],
+         'SSC_NAME_2016': ['Maroochydore'],
+         'SA4_NAME_2016': ['Sunshine Coast'],
+         'SA3_NAME_2016': ['Maroochy'],
+         'SA2_NAME_2016': ['Maroochydore - Kuluin'],
+         'SA1_7DIGITCODE_2016': ['3142707'],
+         'MB_CODE_2016': ['30563074700'],
+         'DISTANCE': [0.0016422183328786543]}
         """
 
         min_distance = 0
