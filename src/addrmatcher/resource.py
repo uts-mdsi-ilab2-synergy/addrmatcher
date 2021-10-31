@@ -224,6 +224,7 @@ def download():
         # disbale CTRL+Z
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
+    # Parse the directory i.e country name
     parser = argparse.ArgumentParser(
         description="Download directories/folders from GitHub"
     )
@@ -231,9 +232,9 @@ def download():
     parser.add_argument(
         "--country",
         "-cty",
-        action="store_true",
-        help="The country of data to which the matching "
-        "will apply to. (Default is Australia if not specified)",
+        type=str,
+        default="Australia",
+        help="Name of the country for which the reference data to download",
     )
 
     args = parser.parse_args()
