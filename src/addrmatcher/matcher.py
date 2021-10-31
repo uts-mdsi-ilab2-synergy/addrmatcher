@@ -129,7 +129,13 @@ class GeoMatcher:
         """
         remove the street number, lot/unit/level number from the address
 
-        :param string address:
+        Parameter
+        ---------
+        address : string
+
+        Return
+        ------
+        an address without the street number
         """
 
         # initiate the result
@@ -161,9 +167,15 @@ class GeoMatcher:
 
     def _cleaning_match_with_index(self, no_number_address):
         """
+        extract suburb, post code and state from the address
 
+        Parameter
+        ---------
+        no_number_address: string
 
-        :param string no_number_address:
+        Returns
+        -------
+        a matched address
         """
 
         # initiate the dataframe
@@ -240,9 +252,15 @@ class GeoMatcher:
 
     def _cleaning_address(self, no_number_address):
         """
+        Clean the address and find the matching address
 
-
-        :param string no_number_address:
+        Parameter
+        --------
+        no_number_address: string
+                           address without street number
+        Return
+        ------
+        a matched address
         """
 
         matched_df = self._cleaning_match_with_index(no_number_address)
@@ -510,6 +528,23 @@ class GeoMatcher:
             )
 
     def _load_parquet(self, lat, lon, distance):
+        """
+        load the rows in the parquet file meeting the condition
+        the condition is to ensure the LATITUDE and LONGITUDE are within a distance from the
+        argument lat and lon
+
+        Parameters
+        ----------
+        lat:float
+            latitude
+        lon:float
+            longitude
+        distance:integer
+                define what the minimum km of distance from the argument lat and lon
+        Returns
+        -------
+        a panda dataframe
+        """
 
         local = fs.LocalFileSystem()
         df = pq.read_table(
@@ -534,15 +569,18 @@ class GeoMatcher:
 
         Parameters
         ----------
-        latitude:float
-        longitude:float
+        lat:float
+            latitude
+        lon:float
+            longitude
         n:integer
             the number of nearest addresses to be returned by the function.
         km:integer
             the nearest addresses will be searched from the input coordinates
             point within the argument kilometer radius
         Returns
-        ----------
+        -------
+        a dictionary of addresses with statistical and administrative regions
         """
 
         min_distance = 0

@@ -14,6 +14,7 @@ color_code = {
     "red": Fore.RED,
     "green": Style.BRIGHT + Fore.GREEN,
 }
+# ANSI terminal control sequence to erase the current line
 erase_line = "\x1b[2K"
 
 
@@ -21,11 +22,20 @@ def print_text(
     text, color="default", in_place=False, **kwargs
 ):  # type: (str, str, bool, any) -> None
     """
-    print text to console
-    :param text string: text to print
-    :param color string: can be one of "red" or "green", or "default"
-    :param in_place boolean: whether to erase previous line and print in place
-    :param kwargs: other keywords passed to built-in print
+    Print text to console
+    Parameters
+    ----------
+    text : string
+           text to print
+    color : string
+            it can be one of "red" or "green", or "default"
+    in_place : boolean
+               whether to erase previous line and print in place
+    **kwargs : dict, optional
+             : other keywords passed to built-in print
+    Returns
+    -------
+    None
     """
     if in_place:
         print("\r" + erase_line, end="")
@@ -34,10 +44,19 @@ def print_text(
 
 def create_url(url):
     """
-    produce a URL that is compatible with Github's REST API from the input url
+    Produce a URL that is compatible with Github's REST API from the input url
     This can handle blob or tree paths.
+    Parameters
+    ----------
+    url : string
+          url to the data directory in Github repository
+    Returns
+    -------
+    apiurl      : string
+                  Github API url
+    downloadurl : string
+                  Download directory
 
-    :param url string: Url to the data directory in Github repository
     """
     repo_only_url = re.compile(
         r"https:\/\/github\.com\/[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\/[a-zA-Z0-9]+$"
@@ -47,6 +66,7 @@ def create_url(url):
     # Check if the given url is a url to a GitHub repo.
     # If it is, inform the user to use 'git clone' to download it
     if re.match(repo_only_url, url):
+
         print_text(
             "✘ The given url is a complete repository. "
             "Use 'git clone' to download the repository",
@@ -57,7 +77,7 @@ def create_url(url):
 
     # Extract the branch name from the given url (e.g master)
     branch = re_branch.search(url)
-    download_dirs = url[branch.end():]
+    download_dirs = url[branch.end() :]
     api_url = (
         url[: branch.start()].replace("github.com", "api.github.com/repos", 1)
         + "/contents/"
@@ -70,9 +90,16 @@ def create_url(url):
 
 def download_data(country="Australia", output_dir=CWD):
     """
-    Downloads the files and directories and sub-directories in repo_url.
-    param country string: country name which will be
-    sub-directory name example - data/Australia/
+    download the files and directories and sub-directories in repo_url.
+
+    Parameters
+    ----------
+    country : str
+              country name which will be sub-directory name example - data/Australia/
+    Return
+    ------
+    total_file  : int
+                  number of total files downloaded
     """
 
     # This is the temporary place to host of data files.
@@ -83,20 +110,19 @@ def download_data(country="Australia", output_dir=CWD):
         + "/"
     )
 
-    # generate the url which returns the JSON data
+    # Generate the url which returns the JSON data
     api_url, download_dirs = create_url(repo_url)
 
-    # To handle file names.
+    # Handle the directory path, Sync the path in Git and the path in local
     if len(download_dirs.split(".")) == 0:
         dir_out = os.path.join(output_dir, download_dirs)
     else:
-        print("length ", len(download_dirs.split(".")))
-        dir_out = os.path.join(output_dir,
-                               "/".join(download_dirs.split("/")[:-1]))
+        dir_out = os.path.join(output_dir, "/".join(download_dirs.split("/")[:-1]))
 
-    # make a directory with the name which is taken from the actual repo
+    # Make a directory in the local with the name which is taken from the actual repo
     os.makedirs(dir_out, exist_ok=True)
 
+    # Open the URL
     try:
         opener = request.build_opener()
         opener.addheaders = [("User-agent", "Mozilla/5.0")]
@@ -119,7 +145,7 @@ def download_data(country="Australia", output_dir=CWD):
         # can use it for the output information later
         total_files += len(data)
 
-        # If the data is a file, download it as one.
+        # If the data is a single file, download it as one.
         if isinstance(data, dict) and data["type"] == "file":
             try:
                 # download the file
@@ -132,7 +158,7 @@ def download_data(country="Australia", output_dir=CWD):
                 # bring the cursor to the beginning,
                 # erase the current line, and dont make a new line
                 print_text(
-                    "Downloaded====:" + Fore.WHITE + "{}".format(data["name"]),
+                    "Downloaded: " + Fore.WHITE + "{}".format(data["name"]),
                     "green",
                     in_place=True,
                 )
@@ -145,13 +171,13 @@ def download_data(country="Australia", output_dir=CWD):
                 print_text("✘ Got interrupted", "red", in_place=False)
                 sys.exit()
 
+        # If Data is a directory which contains a list of file, not a single file
         for file in data:
             file_url = file["download_url"]
             file_name = file["name"]
 
             path = file["path"]
             dirname = os.path.dirname(path)
-            print("path", path)
 
             if dirname != "":
                 os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -198,6 +224,7 @@ def download():
         # disbale CTRL+Z
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
+    # Parse the directory i.e country name
     parser = argparse.ArgumentParser(
         description="Download directories/folders from GitHub"
     )
@@ -205,9 +232,9 @@ def download():
     parser.add_argument(
         "--country",
         "-cty",
-        action="store_true",
-        help="The country of data to which the matching "
-        "will apply to. (Default is Australia if not specified)",
+        type=str,
+        default="Australia",
+        help="Name of the country for which the reference data to download",
     )
 
     args = parser.parse_args()
