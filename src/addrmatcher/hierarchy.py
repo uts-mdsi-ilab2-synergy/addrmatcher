@@ -1,8 +1,12 @@
 from .region import Region
-from operator import lt, le, ge, gt
+from operator import le, ge
 
 
 class GeoHierarchy:
+    """
+    The GeoHierarchy class represents the structure of a country's region/area;
+    for instance, a state or a province is the sub-region of a country.
+    """
 
     __slot__ = (
         "_type",
@@ -13,6 +17,7 @@ class GeoHierarchy:
     )
 
     def __init__(self, country, name, coordinate_boundary=None):
+        # country is the root of the hierarchy
         self._type = {}
         self._type_root = {}
         self._country = self._Node(country)
@@ -21,18 +26,81 @@ class GeoHierarchy:
 
     @property
     def type(self):
+        """
+        Return the dictionary that contains all the defined regional structures.
+        Returns
+        -------
+        dictionary
+            The defined regional structures
+        Examples
+        --------
+        >>> country = Region("Country")
+        >>> state = Region("State",col_name="STATE")
+        >>> sa4 = Region("Statistica Area 4",short_name="SA4",col_name="SA4")
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.add_region(region=state, parent_region=country)
+        >>> australia.add_region(region=sa4, parent_region=state)
+        >>> australia.add_type(sa4,"ASGS","Australian Statistical Geography Standard")
+        >>> australia.type
+        {'ASGS': 'Australian Statistical Geography Standard'}
+        """
         return self._type
 
     @property
     def name(self):
+        """
+        Return the name of the country
+        Returns
+        -------
+        string
+            The name of the country
+        Examples
+        --------
+        The country's name can be set initially when calling the constructor.
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.name
+        'Australia'
+        """
         return self._country_name
 
     @property
     def coordinate_boundary(self):
+        """
+        Return the list of coordinates as the boundary of a country.
+        The format is [minimum latitude, maximum latitude, minimum longitude,
+        maximum longitude]
+        Returns
+        -------
+        string
+            The coordinate boundary of a country
+        Examples
+        --------
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.coordinate_boundary = [-43.58301104, -9.23000371,
+                                             96.82159219, 167.99384663]
+        >>> australia.coordinate_boundary
+        [-43.58301104, -9.23000371, 96.82159219, 167.99384663]
+        """
         return self._coordinate_boundary
 
     @coordinate_boundary.setter
     def coordinate_boundary(self, value):
+        """
+        Set or modify the coordinate boundaries of a country.
+        Parameters
+        ----------
+        value:list
+            The coordinate boundary of a country.
+            The format of the input is : [minimum latitude, maximum latitude,
+            minimum longitude, maximum longitude]
+        Examples
+        --------
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.coordinate_boundary = [-43.58301104, -9.23000371,
+                                             96.82159219, 167.99384663]
+        >>> australia.coordinate_boundary
+        [-43.58301104, -9.23000371, 96.82159219, 167.99384663]
+        """
         if value is not None:
             if isinstance(value, list) and len(value):
                 if (value[0] < value[1]) and (value[2] < value[3]):
@@ -54,15 +122,31 @@ class GeoHierarchy:
 
     def add_type(self, region, type_id, type_name=""):
         """
-        add a new geographical hierarchy type, for instace: statistical area, administrative level
-        :param Region region: The root region for the hierarchy.
-                              The common upper level region name which is shared with other
-                              hierarchy can't be assigned as a root.
-                              For instance, administrative level and statistical area use
-                              Country or State/Province as their upper regional level
-        :param string type_id: a unique identifier for the type
-        :param string type_name:
-
+        Add a new geographical hierarchy type, for instace: statistical area,
+        administrative level
+        Parameters
+        ----------
+        region:Region
+            The smallest root region for the hierarchy.
+            The common upper-level region name, shared with other types of
+            hierarchies, can't be assigned as a root.
+            For instance, administrative level and statistical area use
+            Country or State/Province as their upper regional level
+        type_id:string
+            The unique identifier for the structural type
+        type_name:string
+            The name of the regional structure type
+        Examples
+        --------
+        >>> country = Region("Country")
+        >>> state = Region("State",col_name="STATE")
+        >>> sa4 = Region("Statistica Area 4",short_name="SA4",col_name="SA4")
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.add_region(region=state, parent_region=country)
+        >>> australia.add_region(region=sa4, parent_region=state)
+        >>> australia.add_type(sa4,"ASGS","Australian Statistical Geography Standard")
+        >>> australia.type
+        {'ASGS': 'Australian Statistical Geography Standard'}
         """
 
         # validate the arguments
@@ -84,10 +168,19 @@ class GeoHierarchy:
 
     def add_region(self, region, parent_region):
         """
-        add a region as a child/sub region of another region
-
-        :param Region region: the sub region to be added as a child of the parent region
-        :param Region parent_region:
+        Add a region as a child/sub region of another region
+        Parameters
+        ----------
+        region:Region
+            The sub region to be added as a child of the parent region
+        parent_region:Region
+            The direct upper-level of the region
+        Examples
+        --------
+        >>> country = Region("Country")
+        >>> state = Region("State",col_name="STATE")
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.add_region(region=state, parent_region=country)
         """
 
         # validate the arguments
@@ -111,8 +204,7 @@ class GeoHierarchy:
 
     def get_regions_by_name(self, operator=None, name="", names=[], attribute=""):
         """
-        get all the relevant regions from the hierarchy based on the given parameters
-
+        Get all the relevant regions from the hierarchy based on the given parameters
         Parameters
         ----------
         operator: Operator
@@ -132,6 +224,30 @@ class GeoHierarchy:
         -------
         list
             list of regions or region's attribute
+        Examples
+        --------
+        >>> country = Region("Country")
+        >>> state = Region("State",col_name="STATE")
+        >>> sa4 = Region("Statistica Area 4",short_name="SA4",col_name="SA4")
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.add_region(region=state, parent_region=country)
+        >>> australia.add_region(region=sa4, parent_region=state)
+        >>> regions = australia.get_regions_by_name()
+        >>> for region in regions:
+        >>>     print(region.name)
+        Country
+        State
+        Statistica Area 4
+        >>> regions = australia.get_regions_by_name(operator=le,name='State')
+        >>> for region in regions:
+        >>>     print(region.name)
+        State
+        Statistica Area 4
+        >>> col_names = australia.get_regions_by_name(names=['State','SA4'], attribute='col_name')
+        >>> for col_name in col_names:
+        >>>     print(col_name)
+        STATE
+        SA4
         """
 
         # validate the arguments
@@ -146,10 +262,8 @@ class GeoHierarchy:
             )
 
         if operator is not None:
-            if operator not in [lt, le, ge, gt]:
-                raise ValueError(
-                    "Invalid operator value. Select one of lt, le, ge, or lt"
-                )
+            if operator not in [le, ge]:
+                raise ValueError("Invalid operator value. Select one of 'le' or 'ge'")
 
         if attribute.strip() != "":
             if attribute not in ["name", "short_name", "col_name"]:
@@ -158,6 +272,7 @@ class GeoHierarchy:
                 )
 
         regions = []
+        # get multiple region. names are provided
         if len(names) > 0:
             for reg_name in names:
                 node = self._country.get_node_by_name(reg_name)
@@ -168,11 +283,11 @@ class GeoHierarchy:
                         regions.append(getattr(node.region, attribute))
                 else:
                     ValueError("Region is not found")
-
+        # get all the corresponding regions based on the operator 'ge' or 'le'
         elif name != "":
             reference_node = self._country.get_node_by_name(name)
             if reference_node is not None:
-                if operator in [gt, ge]:
+                if operator in [ge]:
                     nodes = self._country.get_all_nodes(
                         lowest_region=reference_node.region
                     )
@@ -192,7 +307,7 @@ class GeoHierarchy:
                             regions.append(getattr(node.region, attribute))
             else:
                 ValueError("Region is not found")
-
+        # get all the nodes
         else:
             nodes = self._country.get_all_nodes()
             if attribute.strip() == "":
@@ -205,9 +320,31 @@ class GeoHierarchy:
         return regions
 
     def get_smallest_region_boundaries(self):
+        """
+        Get the smallest regional unit
+        Returns
+        -------
+        Region
+            the smallest regional unit
+        Examples
+        --------
+        >>> country = Region("Country")
+        >>> state = Region("State",col_name="STATE")
+        >>> sa4 = Region("Statistica Area 4",short_name="SA4",col_name="SA4")
+        >>> australia = new GeoHierarchy(country,"Australia")
+        >>> australia.add_region(region=state, parent_region=country)
+        >>> australia.add_region(region=sa4, parent_region=state)
+        >>> australia.get_smallest_region_boundaries.name
+        Statistica Area 4
+        """
         return self._country.get_leaf_node().region
 
     class _Node:
+        """
+        The internal class for the hierarchy to encapsulate the Region
+        instances into a Node for building the tree purposes.
+        One Node contains one Region only.
+        """
 
         __slot__ = ("_region", "_child")
 
@@ -221,22 +358,35 @@ class GeoHierarchy:
 
         @property
         def region(self):
+            """
+            Return the region within the node
+            """
             return self._region
 
         @property
         def child(self):
+            """
+            Return the list of the child node
+            (similar to sub-region)
+            """
             return self._child
 
         def add_child(self, child):
+            """
+            Add a child to the node
+            (add sub-region to a region)
+            """
             self._child.append(child)
 
         def get_node_by_region(self, region):
-            # print("-->"+str(self._region))
+            """
+            Searching for a node within its tree (the node itself and
+            its subnode), based on the region's object.
+            """
             if self._region == region:
                 return self
             else:
                 for child in self._child:
-                    # print("-->child:"+str(child._region))
                     match = child.get_node_by_region(region)
                     if match is not None:
                         return match
@@ -245,6 +395,10 @@ class GeoHierarchy:
             return None
 
         def get_node_by_name(self, name):
+            """
+            Searching for a node within its tree (the node itself and
+            its subnode), based on the region's name or short name.
+            """
             if (
                 self._region.name.lower() == name.lower()
                 or self._region.short_name.lower() == name.lower()
