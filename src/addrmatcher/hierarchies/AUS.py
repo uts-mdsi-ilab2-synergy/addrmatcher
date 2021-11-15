@@ -1,5 +1,5 @@
-from .region import Region
-from .hierarchy import GeoHierarchy
+from region import Region
+from hierarchy import GeoHierarchy
 
 country = Region("Country", "National")
 
