@@ -1,8 +1,7 @@
 """
 Data structure for the regional unit
 """
-from dataclasses import dataclass, field
-
+from dataclasses import dataclass
 
 @dataclass
 class Region:
@@ -23,7 +22,7 @@ class Region:
     Examples
     --------
     The area's column name can be set initially when calling the constructor.
-    >>> sa2 = new Region('Statistical Area 2',short_name='SA2',col_name='SA2')
+    >>> sa2 = Region('Statistical Area 2',short_name='SA2',col_name='SA2')
     >>> sa2.col_name
     'SA2'
     """
@@ -32,8 +31,11 @@ class Region:
     short_name: str = ""
     col_name: str = ""
     
-    
     def __post_init__(self):
+        """
+        If column name is undefined, set the region name as the column name
+        (default)
+        """
         if not self.col_name:
             self.col_name = self.name
 
