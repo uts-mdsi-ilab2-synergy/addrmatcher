@@ -21,8 +21,8 @@ erase_line = "\x1b[2K"
 def print_text(
     text, color="default", in_place=False, **kwargs
 ):  # type: (str, str, bool, any) -> None
-    """
-    Print text to console
+    """Print text to console.
+
     Parameters
     ----------
     text : string
@@ -33,9 +33,7 @@ def print_text(
                whether to erase previous line and print in place
     **kwargs : dict, optional
              : other keywords passed to built-in print
-    Returns
-    -------
-    None
+
     """
     if in_place:
         print("\r" + erase_line, end="")
@@ -43,16 +41,17 @@ def print_text(
 
 
 def create_url(url):
-    """
-    Produce a URL that is compatible with Github's REST API from the input url
+    """Produce a URL that is compatible with Github's REST API from the input url
     This can handle blob or tree paths.
+
     Parameters
     ----------
     url : string
           url to the data directory in Github repository
+
     Returns
     -------
-    apiurl      : string
+    apiurl  : string
                   Github API url
     downloadurl : string
                   Download directory
@@ -89,17 +88,18 @@ def create_url(url):
 
 
 def download_data(country="Australia", output_dir=CWD):
-    """
-    download the files and directories and sub-directories in repo_url.
+    """Download the files in directories and sub-directories in repo_url.
 
     Parameters
     ----------
-    country : str
+    country : string
               country name which will be sub-directory name example - data/Australia/
-    Return
-    ------
-    total_file  : int
+
+    Returns
+    -------
+    total_file : int
                   number of total files downloaded
+
     """
 
     # This is the temporary place to host of data files.
@@ -216,9 +216,7 @@ def download_data(country="Australia", output_dir=CWD):
 
 
 def download():
-    """
-    Trigger the download_data function and read the argument from user's CLI
-    """
+    """Trigger the download_data function and read the argument from user's command line interface."""
 
     if sys.platform != "win32":
         # disbale CTRL+Z
