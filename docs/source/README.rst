@@ -43,7 +43,7 @@ Import the package and classes
 
 
 Example - Address Matching
-********************************
+**************************
 .. code-block::
        
        matched_address = matcher.get_region_by_address("9, George Street, North Strathfield, NSW 2137")
@@ -62,7 +62,7 @@ Example - Address Matching
         
 
 Example - Coordinate Matching
-***********************************
+*****************************
 .. code-block::
 
        nearest_address = matcher.get_region_by_coordinates(-29.1789874, 152.628291)
