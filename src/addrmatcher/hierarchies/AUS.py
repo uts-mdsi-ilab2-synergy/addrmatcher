@@ -1,5 +1,5 @@
-from region import Region
-from hierarchy import GeoHierarchy
+from ..region import Region
+from ..hierarchy import GeoHierarchy
 
 country = Region("Country", "National")
 
@@ -35,5 +35,4 @@ AUS.add_region(region=mb, parent_region=sa1)
 AUS.add_type(lga, "Administrative")
 AUS.add_type(sa4, "ASGS", "Australian Statistical Geography Standard")
 
-AUS.coordinate_boundary = [-43.58301104, -9.23000371,
-                           96.82159219, 167.99384663]
+AUS.coordinate_boundary = [-43.58301104, -9.23000371, 96.82159219, 167.99384663]

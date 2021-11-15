@@ -1,53 +1,35 @@
-addrmatcher package
+Addrmatcher Package
 ===================
 
-Submodules
-----------
 
-addrmatcher.AU module
----------------------
-
-.. automodule:: addrmatcher.AU
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-addrmatcher.hierarchy module
-----------------------------
+Hierarchy
+---------
 
 .. automodule:: addrmatcher.hierarchy
    :members:
    :undoc-members:
    :show-inheritance:
 
-addrmatcher.matcher module
---------------------------
+Matcher
+-------
 
 .. automodule:: addrmatcher.matcher
    :members:
    :undoc-members:
    :show-inheritance:
 
-addrmatcher.region module
--------------------------
+Region
+------
 
 .. automodule:: addrmatcher.region
    :members:
    :undoc-members:
    :show-inheritance:
 
-addrmatcher.resource module
----------------------------
+Resource
+--------
 
 .. automodule:: addrmatcher.resource
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: addrmatcher
    :members:
    :undoc-members:
    :show-inheritance:
