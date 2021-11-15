@@ -127,16 +127,17 @@ class GeoMatcher:
         }
 
     def _remove_street_number(self, address):
-        """
-        Remove the street number, lot/unit/level number, or similar attributes
-        from the address
-        Parameter
+        """Remove the street number, lot/unit/level number, or similar attributes
+        from the address.
+
+        Parameters
         ---------
         address: string
             The physical address' text
-        Return
+        Returns
         ------
             An address without the street number
+
         """
 
         # initiate the result
@@ -389,9 +390,11 @@ class GeoMatcher:
         string_metric:string
             The name of the edit distance algorithm used.
             Select one of 'levenshtein','jaro', or 'jaro_winkler'
+
         Returns
         -------
             the dictionary of the matched adddresses
+
         Examples
         --------
         >>> matcher = GeoMatcher(AUS)
@@ -625,13 +628,15 @@ class GeoMatcher:
             latitude
         lon:float
             longitude
-        n:integer
+        n : integer
             the number of nearest addresses to be returned by the function.
-        km:integer
+        km : integer
             the nearest addresses will be searched from the input coordinates
             point within the argument kilometer radius
+
         Returns
         -------
+        dict
             a dictionary of addresses with statistical and administrative regions
         Examples
         --------

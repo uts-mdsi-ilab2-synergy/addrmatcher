@@ -6,7 +6,7 @@ Data structure for the regional unit
 class Region:
     """
     The Region class represents a unit of area in the country.
-    Each region has a unique name and a corresponding column 
+    Each region has a unique name and a corresponding column
     in the reference dataset.
     """
 
@@ -24,28 +24,33 @@ class Region:
     @property
     def name(self):
         """
-        Return the name of the administrative area or statistical area level
+        Return the name of the administrative area or statistical area level.
+
         Returns
         -------
         string
             The name of the area unit
+
         Examples
         --------
         The area name can be set initially when calling the constructor.
         >>> state = new Region('State',col_name='STATE')
         >>> state.name
         'State'
+
         """
         return self._name
 
     @name.setter
     def name(self, value):
         """
-        Set or rename the name of the administrative area or statistical area level
+        Set or rename the name of the administrative area or statistical area level.
+
         Parameters
         ----------
         value: string
             The name of the area unit
+
         Examples
         --------
         >>> state.name = 'State'
@@ -58,11 +63,13 @@ class Region:
     def short_name(self):
         """
         Return the short name or abbreviation of the administrative area or
-        statistical area level
+        statistical area level.
+
         Returns
         -------
         string
             The short name of the area unit
+
         Examples
         --------
         The area's short name can be set initially when calling the constructor.
@@ -76,11 +83,13 @@ class Region:
     def short_name(self, value):
         """
         Set or rename the short name or abbreviation of the administrative area or
-        statistical area level
+        statistical area level.
+
         Parameters
         ----------
         value: string
             The short name of the area unit
+
         Examples
         --------
         >>> sa1.short_name = 'SA-1'
@@ -93,17 +102,20 @@ class Region:
     def col_name(self):
         """
         Return the corresponding column name of the administrative area or
-        statistical area level which is stored in the reference dataset
+        statistical area level which is stored in the reference dataset.
+
         Returns
         -------
         string
             The column name of the area unit
+
         Examples
         --------
         The area's column name can be set initially when calling the constructor.
         >>> sa2 = new Region('Statistical Area 2',short_name='SA2',col_name='SA2')
         >>> sa2.col_name
         'SA2'
+
         """
         return self._col_name
 
@@ -112,6 +124,7 @@ class Region:
         """
         Set or rename the column name of the administrative area or
         statistical area level
+
         Parameters
         ----------
         value: string

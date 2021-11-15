@@ -124,6 +124,7 @@ class GeoHierarchy:
         """
         Add a new geographical hierarchy type, for instace: statistical area,
         administrative level
+
         Parameters
         ----------
         region:Region
@@ -136,6 +137,7 @@ class GeoHierarchy:
             The unique identifier for the structural type
         type_name:string
             The name of the regional structure type
+
         Examples
         --------
         >>> country = Region("Country")
@@ -205,9 +207,10 @@ class GeoHierarchy:
     def get_regions_by_name(self, operator=None, name="", names=[], attribute=""):
         """
         Get all the relevant regions from the hierarchy based on the given parameters
+
         Parameters
         ----------
-        operator: Operator
+        operator : Operator
             use the operator to find all the upper/lower level regions
             from a particular region name.
             For instance: Country > State (Country gt State).
@@ -220,10 +223,12 @@ class GeoHierarchy:
             the region's attribute name that will be saved into the list
             (name, short_name, or col_name)
             if it's empty, then the list will store the object of the region
+
         Returns
         -------
         list
             list of regions or region's attribute
+
         Examples
         --------
         >>> country = Region("Country")
@@ -322,10 +327,12 @@ class GeoHierarchy:
     def get_smallest_region_boundaries(self):
         """
         Get the smallest regional unit
+
         Returns
         -------
         Region
             the smallest regional unit
+
         Examples
         --------
         >>> country = Region("Country")
