@@ -1,7 +1,7 @@
 """
 Data structure for the regional unit
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
