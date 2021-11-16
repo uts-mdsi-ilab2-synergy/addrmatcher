@@ -3,13 +3,14 @@ Data structure for the regional unit
 """
 from dataclasses import dataclass
 
+
 @dataclass
 class Region:
     """
     The Region class represents a unit of area in the country.
-    Each region has a unique name and a corresponding column 
+    Each region has a unique name and a corresponding column
     in the reference dataset.
-    
+
     Parameters
     ----------
     name: string
@@ -18,7 +19,7 @@ class Region:
         The short name of the area unit
     col_name: string
         The column name of the area unit
-    
+
     Examples
     --------
     The area's column name can be set initially when calling the constructor.
@@ -26,11 +27,11 @@ class Region:
     >>> sa2.col_name
     'SA2'
     """
-    
+
     name: str
     short_name: str = ""
     col_name: str = ""
-    
+
     def __post_init__(self):
         """
         If column name is undefined, set the region name as the column name
