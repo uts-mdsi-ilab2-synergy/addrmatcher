@@ -395,7 +395,7 @@ class GeoMatcher:
         Examples
         --------
         >>> matcher = GeoMatcher(AUS)
-        >>> matched = matcher.get_region_by_address("25 Darnley Street,
+        >>> matched = matcher.get_region_by_address("2885 Darnley Street,
                       Braybrookt, VIC 3019", similarity_threshold = 0.95)
         >>> matched
         {'MB_CODE_2016': ['20375120000'],
@@ -407,7 +407,7 @@ class GeoMatcher:
          'RATIO': [0.9841269841269842],
          'SSC_NAME_2016': ['Braybrook'],
          'LGA_NAME_2016': ['Maribyrnong (C)'],
-         'FULL_ADDRESS': ['25 DARNLEY STREET BRAYBROOK VIC 3019']}
+         'FULL_ADDRESS': ['2885 DARNLEY STREET BRAYBROOK VIC 3019']}
         """
 
         if string_metric not in ["levenshtein", "jaro", "jaro_winkler"]:
