@@ -1,4 +1,4 @@
-addrmatcher
+Addrmatcher
 ===========
 
 .. toctree::
