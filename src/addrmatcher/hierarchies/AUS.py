@@ -35,4 +35,4 @@ AUS.add_region(region=mb, parent_region=sa1)
 AUS.add_type(lga, "Administrative")
 AUS.add_type(sa4, "ASGS", "Australian Statistical Geography Standard")
 
-AUS.coordinate_boundary = [-43.58301104, -9.23000371, 96.82159219, 167.99384663]
+AUS.set_coordinate_boundary(-43.58301104, -9.23000371, 96.82159219, 167.99384663)
