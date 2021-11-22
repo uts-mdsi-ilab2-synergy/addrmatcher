@@ -32,14 +32,6 @@ class Region:
     short_name: str = ""
     col_name: str = ""
 
-    def __post_init__(self):
-        """
-        If column name is undefined, set the region name as the column name
-        (default)
-        """
-        if not self.col_name:
-            self.col_name = self.name
-
     def __str__(self):
         return self.name
 
