@@ -89,7 +89,4 @@ Example - Coordinate Matching
        'DISTANCE': [6.859565028181215e-05]}
 
 
-.. note:: This is a **note** box.
-
-
 
