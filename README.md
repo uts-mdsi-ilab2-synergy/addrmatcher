@@ -24,9 +24,11 @@ Data Download
 
  In the command line interface,
 
-`addrmatcher_data_download`
+`addrmatcher-data aus`
 
-The above console script will download the dataset which is currently hosted in Github into the user's directory. By default, the country is __Australia__ and Australia physical addresses will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
+The above console script will download the dataset which is currently hosted in Github into the user's directory.
+
+`addrmatcher-data` takes an argument __country__. By default, the country is __Australia__ which is indicated by __aus__ and Australia address files will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
        
 Import the package and classes
 ------------------
@@ -49,7 +51,7 @@ print(matched_address)
  'SA3_NAME_2016': ['Canada Bay'],
  'RATIO': [100.0],
  'STATE': ['NSW'],
- 'FULL_ADDRESS': ['9 GEORGE STREET NORTH STRATHFIELD NSW 2137'],
+ 'FULL_ADDRESS': ['9121 GEORGE STREET NORTH STRATHFIELD NSW 2137'],
  'SA2_NAME_2016': ['Concord West - North Strathfield'],
  'SSC_NAME_2016': ['North Strathfield'],
  'MB_CODE_2016': ['11205258900'],
