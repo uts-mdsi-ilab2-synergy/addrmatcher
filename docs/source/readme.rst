@@ -36,7 +36,7 @@ Import the package and classes
 .. code-block::
 
        # Import the installed package
-       from addrmatcher import AUS, GeoMatcher, GeoHierarchy
+       from addrmatcher import AUS, GeoMatcher
 
        # Initialise the geo region as AUS
        matcher = GeoMatcher(AUS)
@@ -46,7 +46,7 @@ Example - Address Matching
 **************************
 .. code-block::
        
-       matched_address = matcher.get_region_by_address("9, George Street, North Strathfield, NSW 2137")
+       matched_address = matcher.get_region_by_address("9121, George Street, North Strathfield, NSW 2137")
        print(matched_address)
 
        > {'SA4_NAME_2016': ['Sydney - Inner West'],
