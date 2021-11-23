@@ -1,8 +1,6 @@
-Hierarchies 
-===========
 
-AUS module
-----------
+AUS
+===
 
 .. automodule:: addrmatcher.hierarchies.AUS
    :members:
