@@ -1,17 +1,15 @@
-Addrmatcher Package
-===================
 
-
-Hierarchy
----------
+Hierarchies
+===========
 
 .. automodule:: addrmatcher.hierarchy
    :members:
    :undoc-members:
    :show-inheritance:
+   
 
 Matcher
--------
+=======
 
 .. automodule:: addrmatcher.matcher
    :members:
@@ -19,7 +17,7 @@ Matcher
    :show-inheritance:
 
 Region
-------
+======
 
 .. automodule:: addrmatcher.region
    :members:
@@ -27,7 +25,7 @@ Region
    :show-inheritance:
 
 Resource
---------
+========
 
 .. automodule:: addrmatcher.resource
    :members:

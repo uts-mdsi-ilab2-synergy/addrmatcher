@@ -1,11 +1,6 @@
-addrmatcher.hierarchies package
-===============================
 
-Submodules
-----------
-
-addrmatcher.hierarchies.AUS module
-----------------------------------
+AUS
+===
 
 .. automodule:: addrmatcher.hierarchies.AUS
    :members:

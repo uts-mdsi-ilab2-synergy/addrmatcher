@@ -24,15 +24,17 @@ Data Download
 
  In the command line interface,
 
-`addrmatcher_data_download`
+`addrmatcher-data aus`
 
-The above console script will download the dataset which is currently hosted in Github into the user's directory. By default, the country is __Australia__ and Australia physical addresses will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
+The above console script will download the dataset which is currently hosted in Github into the user's directory.
+
+`addrmatcher-data` takes an argument __country__. By default, the country is __Australia__ which is indicated by __aus__ and Australia address files will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
        
 Import the package and classes
 ------------------
 ```python
 # Import the installed package
-from addrmatcher import AUS, GeoMatcher, GeoHierarchy
+from addrmatcher import AUS, GeoMatcher
 
 # Initialise the geo region as AUS
 matcher = GeoMatcher(AUS)
@@ -41,7 +43,7 @@ matcher = GeoMatcher(AUS)
 Example - Address-based Matching
 --------------------------------
 ```python
-matched_address = matcher.get_region_by_address("9, George Street, North Strathfield, NSW 2137")
+matched_address = matcher.get_region_by_address("9121, George Street, North Strathfield, NSW 2137")
 print(matched_address)
 
 >{'SA4_NAME_2016': ['Sydney - Inner West'],
@@ -49,7 +51,7 @@ print(matched_address)
  'SA3_NAME_2016': ['Canada Bay'],
  'RATIO': [100.0],
  'STATE': ['NSW'],
- 'FULL_ADDRESS': ['9 GEORGE STREET NORTH STRATHFIELD NSW 2137'],
+ 'FULL_ADDRESS': ['9121 GEORGE STREET NORTH STRATHFIELD NSW 2137'],
  'SA2_NAME_2016': ['Concord West - North Strathfield'],
  'SSC_NAME_2016': ['North Strathfield'],
  'MB_CODE_2016': ['11205258900'],

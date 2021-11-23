@@ -1,6 +1,6 @@
 Introduction
 ============
-Addrmatcher is an open-source Python software for matching input string addresses to the most similar street addresses and the geo coordinates inputs to the nearest street addresses. The result provides not only the matched addresses, but also the respective country’s different levels of regions for instance - in Australia, government administrative regions, statistical areas and suburb in which the address belongs to. 
+Addrmatcher is an open-source Python software for matching input string addresses to the most similar street addresses and the geo coordinates inputs to the nearest street addresses. The result provides not only the matched addresses, but also the respective country’s different levels of regions for instance - in Australia, government administrative regions, statistical areas and suburbs in which the address belongs to. 
 
 The Addrmatcher library is built to work with rapidfuzz, scikit-learn, pandas, numpy and provides user-friendly output. It supports python version 3.6 and above. It runs on all popular operating systems, and quick to install and is free of charge. 
 
@@ -26,17 +26,17 @@ Data Download
  In the command line interface,
 .. code-block::
 
-       addrmatcher_data_download
+       addrmatcher-data aus
 
 
-The above console script will download the dataset which is currently hosted in Github into the user's directory. By default, the country is __Australia__ and Australia physical addresses will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
+The above console script will download the dataset which is currently hosted in Github into the user's directory. addrmatcher-data takes an argument, country. By default, the country is Australia which is indicated by aus. Then Australia address files will be downloaded. After executing the command, the 37 parquet files will be stored in directories for example /data/Australia/*.parquet. 
        
 Import the package and classes
 ******************************
 .. code-block::
 
        # Import the installed package
-       from addrmatcher import AUS, GeoMatcher, GeoHierarchy
+       from addrmatcher import AUS, GeoMatcher
 
        # Initialise the geo region as AUS
        matcher = GeoMatcher(AUS)
@@ -46,7 +46,7 @@ Example - Address Matching
 **************************
 .. code-block::
        
-       matched_address = matcher.get_region_by_address("9, George Street, North Strathfield, NSW 2137")
+       matched_address = matcher.get_region_by_address("9121, George Street, North Strathfield, NSW 2137")
        print(matched_address)
 
        > {'SA4_NAME_2016': ['Sydney - Inner West'],
@@ -54,7 +54,7 @@ Example - Address Matching
          'SA3_NAME_2016': ['Canada Bay'],
          'RATIO': [100.0],
          'STATE': ['NSW'],
-         'FULL_ADDRESS': ['9 GEORGE STREET NORTH STRATHFIELD NSW 2137'],
+         'FULL_ADDRESS': ['9121 GEORGE STREET NORTH STRATHFIELD NSW 2137'],
          'SA2_NAME_2016': ['Concord West - North Strathfield'],
          'SSC_NAME_2016': ['North Strathfield'],
          'MB_CODE_2016': ['11205258900'],
@@ -87,9 +87,6 @@ Example - Coordinate Matching
        'ADDRESS_DETAIL_PID': ['GANSW706638188'],
        'FILE_NAME': ['NSW-10.parquet'],
        'DISTANCE': [6.859565028181215e-05]}
-
-
-.. note:: This is a **note** box.
 
 
 
