@@ -25,12 +25,12 @@ def print_text(
 
     Parameters
     ----------
-    text : string
-           text to print
-    color : string
-            it can be one of "red" or "green", or "default"
-    in_place : boolean
-               whether to erase previous line and print in place
+    text : str
+        text to print
+    color : str
+        it can be one of "red" or "green", or "default"
+    in_place : bool
+        whether to erase previous line and print in place
     **kwargs : dict, optional
              : other keywords passed to built-in print
 
@@ -41,20 +41,19 @@ def print_text(
 
 
 def create_url(url):
-    """Produce a URL that is compatible with Github's REST API from the input url
-    This can handle blob or tree paths.
+    """Produce a URL that is compatible with Github's REST API from the input url.This can handle blob or tree paths.
 
     Parameters
     ----------
-    url : string
-          url to the data directory in Github repository
+    url : str
+      url to the data directory in Github repository
 
     Returns
     -------
-    apiurl  : string
-                  Github API url
-    downloadurl : string
-                  Download directory
+    str
+      Github API url
+    str
+     Download directory
 
     """
     repo_only_url = re.compile(
@@ -92,13 +91,13 @@ def download_data(country="Australia", output_dir=CWD):
 
     Parameters
     ----------
-    country : string
-              country name which will be sub-directory name example - data/Australia/
+    country : str
+        country name which will be sub-directory name example - data/Australia/.
 
     Returns
     -------
-    total_file : int
-                  number of total files downloaded
+    int
+        number of total files downloaded
 
     """
 
@@ -222,7 +221,17 @@ def download():
         # disbale CTRL+Z
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
-    download_data()
+    parser = argparse.ArgumentParser(
+        description="Download address data files from Github"
+    )
+    parser.add_argument("country", help="the country of the address data to download")
+
+    args = parser.parse_args()
+
+    # Make it "Australia" by default in the first release.
+    country = "Australia" if args.country == "AUS".lower() else "Australia"
+
+    download_data(country)
     print_text("✔ Download complete", "green", in_place=True)
 
 
