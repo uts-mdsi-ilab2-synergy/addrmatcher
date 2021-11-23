@@ -1,15 +1,6 @@
 Addrmatcher Package
 ===================
 
-
-Hierarchy
----------
-
-.. automodule:: addrmatcher.hierarchy
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Matcher
 -------
 
