@@ -381,15 +381,17 @@ class GeoMatcher:
             (default = 1)
         regions:string or list of string
             Specify the name or list of names of the regions to be returned by the function
-        operator:list
-            use the operator to find all the upper/lower level regions
-            from a particular region name.
+        operator: Operator
+            use the operator (Operator.ge or Operator.le) to find all the 
+            upper/lower level regions from a particular region name.
             For instance: Country >= State (Country ge State).
                           Use the 'ge' operator to search for the upper level of State
                           (and itself)
         address_cleaning:boolean
-            perform data cleaning on the address, for instance: revise invalid suburb name
-            (currently, only applied to Australian addresses)
+            whether to perform data cleansing on the address, 
+            for instance: revise invalid suburb name 
+            (currently, only applied to Australian addresses. Set this parameter 
+            as True for non-Australian addresses could return an error)
         method:string
             The name of the edit distance algorithm used.
             Select one of DistanceMethod.LEVENSHTEIN,DistanceMethod.JARO, 
@@ -397,7 +399,13 @@ class GeoMatcher:
         
         Returns
         -------
-            the dictionary of the matched adddresses
+        Dictionary
+            the dictionary of the matched adddresses. The keys of the dictionary 
+            are based on the column name defined in the Hierarchy object used. 
+            By default, the function will return only the top similarity record 
+            (nlargest = 1) as long as its similarity is larger than the threshold 
+            ratio. If no addresses have a similarity ratio more than the 
+            threshold, the function will return an empty dictionary.
         
         Examples
         --------
@@ -620,7 +628,11 @@ class GeoMatcher:
         
         Returns
         -------
-            a dictionary of addresses with statistical and administrative regions
+        Dictionary    
+            a dictionary of addresses with statistical and administrative regions.
+            By default, the function will return the record with the smallest
+            distance only (n = 1). If no addresses found within the radius (km), 
+            the function will return an empty dictionary.
         
         Examples
         --------
