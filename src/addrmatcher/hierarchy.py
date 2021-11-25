@@ -232,7 +232,9 @@ class GeoHierarchy:
         Returns
         -------
         list
-            list of regions or region's attribute
+            list of regions or region's attribute. The function will return
+            an empty list if there corresponding regions with the given
+            name or short name are found.
 
         Examples
         --------
