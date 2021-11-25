@@ -84,3 +84,22 @@ print(nearest_address)
  'FILE_NAME': ['NSW-10.parquet'],
  'DISTANCE': [6.859565028181215e-05]}
 ```
+
+How the Address Matching Works?
+-------------------------------
+#### 1. Address-based matching
+The idea behind the address-based matching function is comparing the similarity between two addresses. The more similar the strings are, the more likely both addresses are identical. Therefore, the package adopted the edit-distance method (Levenshtein, Jaro, and Jaro-Winkler) to quantifies text similarity based on the minimum number of operations required to transform one string to the other.
+The package performed address matching by comparing the similarity of the input address with the reference dataset. The function then returns the address and its corresponding regional level that has the highest similarity ratio.
+
+![file structure](https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/blob/docs/images/file-structure.png?raw=true)
+
+An index file was created to store the unique combination of the street name, locality, state, and postcode. The index file keeps the distinct physical addresses without street numbers, lot numbers, and other similar attributes. Also, the complete addresses were divided into multiple files to limit the number of rows in each file below 500,000 addresses. The index file then stores the filename of the full physical address location.
+
+![address matching flows ](https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/blob/docs/images/flows.png?raw=true)
+
+With the new file structure, the package does not need to load all 15 million records and compare the input address with the entire list of addresses. Instead, the package only needs to load the index file and match the input address with the addresses in the index file. Then, the tool uses the matched address to find one of the multiple files containing the corresponding matching addresses. Then another matching between the input address and the address in the file is performed. Therefore, the package only needs to load and match the small factional of the complete addresses.
+
+#### 2. Coordinate-based matching
+Coordinate-based matching is distance-based matching. The coordinate-based matching is performed by searching for addresses closer to the input geo-coordinates based on geo-distances from the addresses in the street address GNAF dataset.
+
+![geo distance](https://github.com/uts-mdsi-ilab2-synergy/addrmatcher/blob/docs/images/geo-distance.png?raw=true)
