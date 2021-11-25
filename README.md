@@ -88,8 +88,8 @@ print(nearest_address)
 How the Address Matching Works?
 -------------------------------
 #### 1. Address-based matching
-The idea behind the address-based matching function is comparing the similarity between two addresses. The more similar the strings are, the more likely both addresses are identical. Therefore, the package adopted the edit-distance method (Levenshtein, Jaro, and Jaro-Winkler) to quantifies text similarity based on the minimum number of operations required to transform one string to the other.
-The package performed address matching by comparing the similarity of the input address with the reference dataset. The function then returns the address and its corresponding regional level that has the highest similarity ratio.
+The idea behind the address-based matching function is comparing the similarity between two addresses. The more similar the strings are, the more likely both addresses are identical. Therefore, the package adopted the edit-distance method (Levenshtein, Jaro, and Jaro-Winkler) to quantify text similarity based on the minimum number of operations required to transform one string to the other.
+The package performs address matching by comparing the similarity of the input address with the reference dataset. The function then returns the address and its corresponding regional level that has the highest similarity ratio.
 
 ![file structure](https://raw.githubusercontent.com/uts-mdsi-ilab2-synergy/addrmatcher/main/docs/images/file-structure.png)
 
@@ -97,9 +97,9 @@ An index file was created to store the unique combination of the street name, lo
 
 ![address matching flows ](https://raw.githubusercontent.com/uts-mdsi-ilab2-synergy/addrmatcher/main/docs/images/flows.png)
 
-With the new file structure, the package does not need to load all 15 million records and compare the input address with the entire list of addresses. Instead, the package only needs to load the index file and match the input address with the addresses in the index file. Then, the tool uses the matched address to find one of the multiple files containing the corresponding matching addresses. Then another matching between the input address and the address in the file is performed. Therefore, the package only needs to load and match the small factional of the complete addresses.
+With this file structure, the package does not need to load all 15 million records and compare the input address with the entire list of addresses. Instead, the package only needs to load the index file and match the combination of street, suburb, state and postcode from the input address with the composite of those in the index file. Then, the matched combination of street, suburb, state and postcode gets the name of the respective address file to load into the memory. After that, string matching is performed between the input address and the addresses in the file. Therefore, the package only needs to load and match the small factional of the entire dataset.
 
 #### 2. Coordinate-based matching
-Coordinate-based matching is distance-based matching. The coordinate-based matching is performed by searching for addresses closer to the input geo-coordinates based on geo-distances from the addresses in the street address GNAF dataset.
+Coordinate-based matching is distance-based matching. The matching is performed by searching for closer addresses in the GNAF (Geo-coded National Address File) dataset to the input geo-coordinates based on geo-distances.
 
 ![geo distance](https://raw.githubusercontent.com/uts-mdsi-ilab2-synergy/addrmatcher/main/docs/images/geo-distance.png)
