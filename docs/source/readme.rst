@@ -22,7 +22,7 @@ Installation
 
 Data Download
 *************
- Once the package has been installed, the reference dataset needs to be downloaded into **the local current project working directory** prior to implementation of the package's matching functions. 
+Once the package has been installed, the reference dataset needs to be downloaded into **the local current project working directory** prior to implementation of the package's matching functions. 
 
  In the command line interface,
 .. code-block::
