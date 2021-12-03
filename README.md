@@ -97,13 +97,13 @@ An index file was created to store the unique combination of the street name, lo
 
 ![address matching flows ](https://raw.githubusercontent.com/uts-mdsi-ilab2-synergy/addrmatcher/main/docs/images/flows.png)
 
-With this file structure, the package does not need to load all 15 million records and compare the input address with the entire list of addresses. Instead, the package only needs to load the index file and match the combination of street, suburb, state and postcode from the input address with the composite of those in the index file. Then, the matched combination of street, suburb, state and postcode gets the name of the respective address file to load into the memory. After that, string matching is performed between the input address and the addresses in the file. Therefore, the package only needs to load and match the small factional of the entire dataset.
+With this file structure, the package does not need to load all 15 million records and compare the input address with the entire list of addresses.Instead, the package only needs to load the index file and match the combination of street, suburb, state and postcode from the input address with the composite of those in the index file. Then, the matched combination of street, suburb, state and postcode gets the name of the respective address file to load into the memory. After that, string matching is performed between the input address and the addresses in the file. Therefore, the package only needs to load and match the small factional of the entire dataset.
 
 #### 2. Coordinate-based matching
-Coordinate-based matching is distance-based matching. The matching is performed by searching for closer addresses in the GNAF dataset to the input geo-coordinates based on geo-distances.
+Coordinate-based matching is distance-based matching. The matching is performed by searching for closer addresses in the GNAF (Geo-coded National Address File) dataset to the input geo-coordinates based on geo-distances.
 
 ![geo distance](https://raw.githubusercontent.com/uts-mdsi-ilab2-synergy/addrmatcher/main/docs/images/geo-distance.png)
 
 #### Documentation
 * __techincal documentation__ [Read the Docs](https://addrmatcher.readthedocs.io/en/latest/)
-*__package__ [Python Packaging Index](https://pypi.org/project/addrmatcher/)
+* __package__ [Python Packaging Index](https://pypi.org/project/addrmatcher/)
