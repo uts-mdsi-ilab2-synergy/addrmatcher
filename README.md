@@ -104,6 +104,8 @@ Coordinate-based matching is distance-based matching. The matching is performed 
 
 ![geo distance](https://raw.githubusercontent.com/uts-mdsi-ilab2-synergy/addrmatcher/main/docs/images/geo-distance.png)
 
-#### Documentation
+Documentation
+-------------
+
 * __techincal documentation__ [Read the Docs](https://addrmatcher.readthedocs.io/en/latest/)
 * __package__ [Python Packaging Index](https://pypi.org/project/addrmatcher/)
