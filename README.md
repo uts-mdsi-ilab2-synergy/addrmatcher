@@ -103,3 +103,7 @@ With this file structure, the package does not need to load all 15 million recor
 Coordinate-based matching is distance-based matching. The matching is performed by searching for closer addresses in the GNAF (Geo-coded National Address File) dataset to the input geo-coordinates based on geo-distances.
 
 ![geo distance](https://raw.githubusercontent.com/uts-mdsi-ilab2-synergy/addrmatcher/main/docs/images/geo-distance.png)
+
+#### Documentation
+* __techincal documentation__ [Read the Docs](https://addrmatcher.readthedocs.io/en/latest/)
+* __package__ [Python Packaging Index](https://pypi.org/project/addrmatcher/)
