@@ -222,7 +222,15 @@ def download():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
     parser = argparse.ArgumentParser(
-        description="Download address data files from Github"
+        description="Download directories/folders from GitHub"
+    )
+
+    parser.add_argument(
+        "--country",
+        "-cty",
+        default="Australia",
+        help="The country of data to which the matching "
+        "will apply to. (Default is Australia if not specified)",
     )
     parser.add_argument("country", help="the country of the address data to download")
 
